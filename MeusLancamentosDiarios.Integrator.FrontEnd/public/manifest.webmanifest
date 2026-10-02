@@ -54,8 +54,8 @@
       "purpose": "maskable any"
     }
   ],
-  "theme_color": "#5E0054",
-  "background_color": "#E8DDCB",
+  "theme_color": "#1E5BC6",
+  "background_color": "#F2F7FF",
   "lang": "pt-BR",
   "description": "Conta corrente: saldo consolidado e lancamentos diarios."
 }

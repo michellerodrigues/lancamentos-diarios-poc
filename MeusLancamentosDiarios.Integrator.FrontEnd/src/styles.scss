@@ -1,25 +1,38 @@
-/* Identidade visual da POC.
+/* Identidade visual da POC: o esquema de cores de carrefoursolucoes.com.br,
+   medido no site em 02/10/2026 (ver docs/identidade-visual.md).
    Azo Sans e a fonte principal; os fallbacks cobrem quem nao a tem instalada. */
 
 :root {
-  --roxo: #5e0054;
-  --roxo-claro: #b287ac;
-  --roxo-desabilitado: #b7a6b4;
-  --aqua: #15a29d;
-  --bege: #e8ddcb;
-  --bege-claro: #f7f4ee;
-  --borda: #dcd0bb;
-  --tinta: #031634;
-  --cinza: #6b6b6b;
-  --placeholder: #9a9a9a;
+  /* Do site */
+  --azul: #1e5bc6;          /* a marca: cabecalho, botao principal, links, saldo */
+  --azul-escuro: #0e2565;   /* botoes escuros e titulos do site */
+  --azul-claro: #e1efff;    /* faixas do site; aqui, texto secundario sobre o azul */
+  --magenta: #e6007e;       /* a acao principal ("Peca ja o seu"); aqui, o novo lancamento */
+  --tinta: #263a79;         /* texto principal */
+  --cinza: #5a626b;         /* texto secundario */
 
-  /* Unica cor fora da paleta oficial: semantica de valor negativo,
-     convencao consolidada em tela financeira. */
+  /* O degrade do destaque do site, do azul ao roxo-magenta. */
+  --degrade: linear-gradient(110deg, #1e5bc6 0%, #4842b3 50%, #9f1b9f 100%);
+
+  /* Derivados: tons para fundo, campo e estados, que o site nao precisa ter. */
+  --magenta-escuro: #c2006a;
+  --azul-desabilitado: #a9bfe6;
+  --fundo: #f2f7ff;
+  --campo: #f7faff;
+  --borda: #cfdcf0;
+  --placeholder: #8a929b;
+
+  /* O ciano do site (#31a7cd) escurecido: no original, texto sobre branco
+     fica em 2,8:1; assim passa de 4,5:1. */
+  --credito: #1a7fa3;
+
+  /* Fora da paleta: semantica de valor negativo, convencao consolidada em
+     tela financeira. O magenta do site e de acao, nao de erro. */
   --vermelho: #b3261e;
 
   --branco: #ffffff;
 
-  --sombra-card: 0 2px 12px rgba(94, 0, 84, 0.08);
+  --sombra-card: 0 2px 12px rgba(14, 37, 101, 0.08);
   --raio-card: 16px;
 
   --fonte: 'Azo Sans', 'Nunito Sans', 'Source Sans 3', 'Segoe UI',
@@ -35,7 +48,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: var(--bege);
+  background: var(--fundo);
   font-family: var(--fonte);
   color: var(--tinta);
   -webkit-font-smoothing: antialiased;
@@ -50,13 +63,13 @@ body {
   min-height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
-  background: var(--bege);
+  background: var(--fundo);
   position: relative;
 }
 
 .cabecalho {
   flex: 0 0 auto;
-  background: var(--roxo);
+  background: var(--azul);
   padding: calc(28px + env(safe-area-inset-top, 0px)) 20px 22px;
   display: flex;
   flex-direction: column;
@@ -67,7 +80,7 @@ body {
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--roxo-claro);
+    color: var(--azul-claro);
   }
 
   &__titulo {
@@ -122,7 +135,7 @@ body {
 
 .aviso {
   background: var(--branco);
-  border: 1px solid rgba(94, 0, 84, 0.18);
+  border: 1px solid rgba(30, 91, 198, 0.18);
   border-radius: 14px;
   padding: 16px 18px;
   display: flex;
@@ -143,14 +156,14 @@ body {
   font-family: inherit;
   font-size: 15px;
   color: var(--tinta);
-  background: var(--bege-claro);
+  background: var(--campo);
   border: 1px solid var(--borda);
   border-radius: 10px;
   padding: 12px 14px;
   outline: none;
 
   &:focus {
-    border-color: var(--roxo);
+    border-color: var(--azul);
   }
 
   &::placeholder {
@@ -166,12 +179,16 @@ body {
   font-size: 15px;
   font-weight: 700;
   color: var(--branco);
-  background: var(--roxo);
+  background: var(--azul);
   cursor: pointer;
   min-height: 44px;
 
+  &:hover:not(:disabled) {
+    background: var(--azul-escuro);
+  }
+
   &:disabled {
-    background: var(--roxo-desabilitado);
+    background: var(--azul-desabilitado);
     cursor: not-allowed;
   }
 }
@@ -209,7 +226,7 @@ body {
 .link {
   font-size: 13px;
   font-weight: 700;
-  color: var(--roxo);
+  color: var(--azul);
   text-decoration: none;
 
   &:hover {
@@ -280,7 +297,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   font-size: 13px;
-  color: var(--roxo-claro);
+  color: var(--azul-claro);
 }
 
 .role {
@@ -291,8 +308,8 @@ body {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--roxo);
-  background: var(--roxo-claro);
+  color: var(--azul-escuro);
+  background: var(--azul-claro);
 }
 
 .sair {

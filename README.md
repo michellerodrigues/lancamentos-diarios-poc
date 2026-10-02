@@ -483,9 +483,16 @@ licenciamento do MediatR para dentro do projeto.
 **`NuGet.config` com `<clear />`.** A POC não consome pacote interno; sem isso o restore
 tenta o feed privado `Agro_Feed` e falha com 401.
 
-**Vermelho no débito.** Única cor fora da paleta oficial, usada só no
-formulário como semântica de valor negativo. Na lista de pendentes o débito fica em
-cinza, dentro da marca.
+**Cores do carrefoursolucoes.com.br.** O front usa o esquema de cores do site, medido
+nele: azul `#1E5BC6` como marca, magenta `#E6007E` só na ação principal (novo
+lançamento) e o degradê do destaque no saldo projetado. Os tokens têm nome de função
+(`--azul`, `--credito`, `--fundo`), então trocar a identidade é mexer só no `:root` do
+`styles.scss`. Paleta, derivados e contraste em
+[docs/identidade-visual.md](docs/identidade-visual.md).
+
+**Vermelho no débito.** Fora da paleta do site, usado só no formulário como semântica de
+valor negativo; o magenta do site é de ação, não de alerta. Na lista de pendentes o
+débito fica em cinza.
 
 ## Indo para o GCP
 
