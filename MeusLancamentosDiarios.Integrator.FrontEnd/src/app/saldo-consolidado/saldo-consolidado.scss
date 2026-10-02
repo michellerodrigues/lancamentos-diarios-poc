@@ -1,0 +1,214 @@
+.card__rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cinza);
+}
+
+.card__titulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tinta);
+}
+
+.saldo-valor {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--roxo);
+  line-height: 1;
+}
+
+.atualizacao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--cinza);
+}
+
+.offline {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--roxo);
+}
+
+.pendentes {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pendente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+
+  & + & {
+    border-top: 1px solid var(--bege);
+  }
+
+  &__icone {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Debito fica em cinza, nao em vermelho: a paleta oficial nao
+       tem vermelho, e aqui basta diferenciar do credito. */
+    background: rgba(3, 22, 52, 0.06);
+    color: var(--cinza);
+
+    &--credito {
+      background: rgba(21, 162, 157, 0.12);
+      color: var(--aqua);
+    }
+  }
+
+  &__texto {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__tipo {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--tinta);
+  }
+
+  &__estagio {
+    font-size: 12px;
+    color: var(--cinza);
+  }
+
+  &__valor {
+    flex: 0 0 auto;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--cinza);
+    white-space: nowrap;
+
+    &--credito {
+      color: var(--aqua);
+    }
+  }
+}
+
+.projetado {
+  background: var(--roxo);
+  border-radius: var(--raio-card);
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 2px 12px rgba(94, 0, 84, 0.18);
+
+  &__rotulo {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--branco);
+  }
+
+  &__valor {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--branco);
+  }
+}
+
+.estado-vazio {
+  margin: 24px 0;
+  text-align: center;
+  color: var(--cinza);
+  font-size: 14px;
+}
+
+.fab {
+  position: fixed;
+  right: calc(50% - 240px + 20px);
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--roxo);
+  color: var(--branco);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(94, 0, 84, 0.35);
+  text-decoration: none;
+
+  &:hover {
+    background: #4a0042;
+  }
+}
+
+/* Abaixo da largura maxima da tela, o botao volta a ancorar na borda. */
+@media (max-width: 520px) {
+  .fab {
+    right: 20px;
+  }
+}
+
+/* Conta em foco, no cabeçalho */
+
+.cabecalho__linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.conta-campo {
+  flex: 0 0 auto;
+  width: 130px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: right;
+  text-transform: uppercase;
+  color: var(--branco);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  padding: 7px 10px;
+  outline: none;
+  min-height: 34px;
+
+  &:focus {
+    border-color: var(--branco);
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  /* Cliente: a conta e informada, nao escolhida. */
+  &--fixa {
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+.ate-sequencia {
+  font-size: 12px;
+  color: var(--cinza);
+}
+
+.pendente__seq {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--roxo);
+}

@@ -1,0 +1,65 @@
+<div class="tela">
+  <header class="cabecalho">
+    <span class="cabecalho__rotulo">Lançamentos Diários</span>
+    <h1 class="cabecalho__titulo">Redefinir senha</h1>
+  </header>
+
+  <main class="conteudo">
+    @if (concluido()) {
+      <section class="card" role="status">
+        <p class="confirmacao">
+          Senha alterada. Por segurança, todas as sessões abertas foram encerradas — entre
+          de novo com a senha nova.
+        </p>
+      </section>
+
+      <a class="botao-principal botao-principal--link" routerLink="/entrar">Entrar</a>
+    } @else if (!token) {
+      <section class="card" role="alert">
+        <p class="confirmacao">
+          Este link está incompleto. Abra de novo o link do e-mail ou peça um novo.
+        </p>
+      </section>
+
+      <a class="botao-principal botao-principal--link" routerLink="/esqueci-senha">Pedir novo link</a>
+    } @else {
+      <form class="formulario-auth" (submit)="redefinir($event)">
+        <section class="card formulario">
+          <label class="rotulo-campo" for="senha">Nova senha</label>
+          <input id="senha"
+                 class="campo"
+                 type="password"
+                 autocomplete="new-password"
+                 [value]="senha()"
+                 (input)="aoDigitar('senha', $event)">
+          <p class="dica-campo">Ao menos 8 caracteres, com letra e número.</p>
+
+          <label class="rotulo-campo" for="confirmacao">Confirme a nova senha</label>
+          <input id="confirmacao"
+                 class="campo"
+                 type="password"
+                 autocomplete="new-password"
+                 [value]="confirmacao()"
+                 (input)="aoDigitar('confirmacao', $event)">
+          @if (senhasDiferentes()) {
+            <p class="dica-campo dica-campo--erro">As senhas não conferem.</p>
+          }
+        </section>
+
+        @if (erros().length > 0) {
+          <div class="erros" role="alert">
+            @for (erro of erros(); track erro) {
+              <p class="erros__item">{{ erro }}</p>
+            }
+          </div>
+        }
+
+        <button type="submit" class="botao-principal" [disabled]="!podeEnviar()">
+          {{ enviando() ? 'Salvando…' : 'Salvar nova senha' }}
+        </button>
+      </form>
+
+      <p class="rodape-auth"><a class="link" routerLink="/esqueci-senha">Pedir novo link</a></p>
+    }
+  </main>
+</div>

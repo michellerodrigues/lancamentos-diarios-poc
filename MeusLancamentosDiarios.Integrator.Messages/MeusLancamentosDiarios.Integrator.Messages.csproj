@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    So os requests e responses da WebApi: o que o BFF envia e le, e o que qualquer
+    outro cliente da WebApi precisaria. Enums e helpers que esses contratos usam
+    vem do Common. Sem Dapper, Pub/Sub nem ASP.NET Core.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>MeusLancamentosDiarios.Integrator.Messages</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Metadados para empacotar com dotnet pack. O PackageId leva o prefixo POCMica.,
+    que e o glob da API key no nuget.org; o namespace do codigo nao muda.
+    Versao publicada e permanente: suba o Version antes de cada novo push.
+    A referencia ao Common vira dependencia do pacote: publique o Common antes.
+  -->
+  <PropertyGroup>
+    <PackageId>POCMica.MeusLancamentosDiarios.Integrator.Messages</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Requests e responses da WebApi dos Lancamentos Diarios: lancamentos, lote, saldo e autenticacao.</Description>
+    <PackageTags>lancamentos;contratos;cqrs;poc</PackageTags>
+    <Authors>mica.msr</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>Copyright (c) 2026 Mica Rodrigues</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- O README vira a pagina do pacote no nuget.org. -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeusLancamentosDiarios.Integrator.Common\MeusLancamentosDiarios.Integrator.Common.csproj" />
+  </ItemGroup>
+
+</Project>

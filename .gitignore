@@ -1,0 +1,24 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+TestResults/
+
+# Pacotes gerados pelo dotnet pack
+nupkgs/
+
+# Variaveis locais do compose (GOOGLE_CLIENT_ID)
+.env
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# IDE
+.vs/
+.idea/
+
+# Pasta do banco SQLite da fase anterior da POC
+dados/

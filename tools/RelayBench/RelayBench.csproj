@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bancada de capacidade do relay. Fica fora da solution de proposito: nao e
+       codigo de producao e nao entra no dotnet test. Ver docs/capacidade-do-relay.md. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MeusLancamentosDiarios.Integrator.Events\MeusLancamentosDiarios.Integrator.Events.csproj" />
+  </ItemGroup>
+
+</Project>

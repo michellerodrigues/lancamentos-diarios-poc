@@ -1,0 +1,6 @@
+# Sem isto o COPY leva o node_modules do Windows para dentro do container Linux,
+# com binarios nativos da plataforma errada, e o build do Angular quebra.
+node_modules/
+dist/
+.angular/
+.vscode/

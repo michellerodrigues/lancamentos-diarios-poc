@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    O que BFF, WebApi e os workers tem em comum e nao e request nem response: enums,
+    helpers, roles e a regra de posse. Sem ASP.NET Core de proposito: o Events e o
+    Consumer dependem daqui e rodam na imagem runtime:9.0, que nao traz o ASP.NET.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>MeusLancamentosDiarios.Integrator.Common</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Metadados para empacotar com dotnet pack. O PackageId leva o prefixo POCMica.,
+    que e o glob da API key no nuget.org; o namespace do codigo nao muda.
+    Versao publicada e permanente: suba o Version antes de cada novo push.
+  -->
+  <PropertyGroup>
+    <PackageId>POCMica.MeusLancamentosDiarios.Integrator.Common</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Tipos comuns da POC Lancamentos Diarios: enums, helpers de dinheiro e formatacao pt-BR, roles, claims e a regra de posse da conta.</Description>
+    <PackageTags>lancamentos;common;poc</PackageTags>
+    <Authors>mica.msr</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>Copyright (c) 2026 Mica Rodrigues</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- O README vira a pagina do pacote no nuget.org. -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

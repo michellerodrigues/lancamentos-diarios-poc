@@ -1,0 +1,20 @@
+# Artefatos de build da maquina host. Sem isto, o COPY leva as pastas obj/ do
+# Windows para dentro do container Linux e o restore quebra: o project.assets.json
+# de la tem caminhos C:\ que o MSBuild nao consegue resolver.
+**/bin/
+**/obj/
+
+# Front-end: nao entra na imagem do relay.
+**/node_modules/
+**/dist/
+**/.angular/
+
+# Banco local da POC.
+**/*.db
+**/*.db-shm
+**/*.db-wal
+dados/
+
+.git/
+.vs/
+.idea/

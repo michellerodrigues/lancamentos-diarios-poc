@@ -1,0 +1,74 @@
+<div class="tela">
+  <header class="cabecalho cabecalho--com-voltar">
+    <a class="voltar" routerLink="/entrar" aria-label="Voltar para o login">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </a>
+    <h1 class="cabecalho__titulo">Criar conta</h1>
+  </header>
+
+  <main class="conteudo">
+    <form class="formulario-auth" (submit)="cadastrar($event)">
+      <section class="card formulario">
+        <label class="rotulo-campo" for="nome">Nome</label>
+        <input id="nome"
+               class="campo"
+               type="text"
+               maxlength="100"
+               autocomplete="name"
+               [value]="nome()"
+               (input)="aoDigitar('nome', $event)">
+
+        <label class="rotulo-campo" for="email">E-mail</label>
+        <input id="email"
+               class="campo"
+               type="email"
+               inputmode="email"
+               autocomplete="email"
+               placeholder="voce@exemplo.com"
+               [value]="email()"
+               (input)="aoDigitar('email', $event)">
+
+        <label class="rotulo-campo" for="senha">Senha</label>
+        <input id="senha"
+               class="campo"
+               type="password"
+               autocomplete="new-password"
+               [value]="senha()"
+               (input)="aoDigitar('senha', $event)">
+        <p class="dica-campo">Ao menos 8 caracteres, com letra e número.</p>
+
+        <label class="rotulo-campo" for="confirmacao">Confirme a senha</label>
+        <input id="confirmacao"
+               class="campo"
+               type="password"
+               autocomplete="new-password"
+               [value]="confirmacao()"
+               (input)="aoDigitar('confirmacao', $event)">
+        @if (senhasDiferentes()) {
+          <p class="dica-campo dica-campo--erro">As senhas não conferem.</p>
+        }
+      </section>
+
+      @if (erros().length > 0) {
+        <div class="erros" role="alert">
+          @for (erro of erros(); track erro) {
+            <p class="erros__item">{{ erro }}</p>
+          }
+        </div>
+      }
+
+      <button type="submit" class="botao-principal" [disabled]="!podeEnviar()">
+        {{ enviando() ? 'Criando…' : 'Criar conta' }}
+      </button>
+    </form>
+
+    <app-botao-google texto="signup_with" (credencial)="cadastrarComGoogle($event)" />
+
+    <p class="rodape-auth">
+      Já tem conta? <a class="link" routerLink="/entrar">Entrar</a>
+    </p>
+  </main>
+</div>

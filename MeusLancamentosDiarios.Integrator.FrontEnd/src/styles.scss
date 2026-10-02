@@ -1,0 +1,313 @@
+/* Identidade visual da POC.
+   Azo Sans e a fonte principal; os fallbacks cobrem quem nao a tem instalada. */
+
+:root {
+  --roxo: #5e0054;
+  --roxo-claro: #b287ac;
+  --roxo-desabilitado: #b7a6b4;
+  --aqua: #15a29d;
+  --bege: #e8ddcb;
+  --bege-claro: #f7f4ee;
+  --borda: #dcd0bb;
+  --tinta: #031634;
+  --cinza: #6b6b6b;
+  --placeholder: #9a9a9a;
+
+  /* Unica cor fora da paleta oficial: semantica de valor negativo,
+     convencao consolidada em tela financeira. */
+  --vermelho: #b3261e;
+
+  --branco: #ffffff;
+
+  --sombra-card: 0 2px 12px rgba(94, 0, 84, 0.08);
+  --raio-card: 16px;
+
+  --fonte: 'Azo Sans', 'Nunito Sans', 'Source Sans 3', 'Segoe UI',
+    -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bege);
+  font-family: var(--fonte);
+  color: var(--tinta);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Componentes reaproveitados pelas duas telas */
+
+.tela {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bege);
+  position: relative;
+}
+
+.cabecalho {
+  flex: 0 0 auto;
+  background: var(--roxo);
+  padding: calc(28px + env(safe-area-inset-top, 0px)) 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__rotulo {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--roxo-claro);
+  }
+
+  &__titulo {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--branco);
+    line-height: 1.2;
+  }
+
+  &--com-voltar {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+}
+
+.voltar {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.24);
+  }
+}
+
+.conteudo {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px 20px calc(96px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--branco);
+  border-radius: var(--raio-card);
+  padding: 22px;
+  box-shadow: var(--sombra-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aviso {
+  background: var(--branco);
+  border: 1px solid rgba(94, 0, 84, 0.18);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rotulo-campo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cinza);
+}
+
+.campo {
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--tinta);
+  background: var(--bege-claro);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 12px 14px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--roxo);
+  }
+
+  &::placeholder {
+    color: var(--placeholder);
+  }
+}
+
+.botao-principal {
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--branco);
+  background: var(--roxo);
+  cursor: pointer;
+  min-height: 44px;
+
+  &:disabled {
+    background: var(--roxo-desabilitado);
+    cursor: not-allowed;
+  }
+}
+
+/* Formulários: novo lançamento e telas de autenticação */
+
+.formulario {
+  gap: 12px;
+}
+
+.erros {
+  background: rgba(179, 38, 30, 0.08);
+  border: 1px solid rgba(179, 38, 30, 0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
+
+  &__item {
+    margin: 0;
+    font-size: 13px;
+    color: var(--vermelho);
+    font-weight: 600;
+
+    & + & {
+      margin-top: 6px;
+    }
+  }
+}
+
+.formulario-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--roxo);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &--direita {
+    align-self: flex-end;
+  }
+}
+
+.dica-campo {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: var(--cinza);
+
+  &--erro {
+    color: var(--vermelho);
+    font-weight: 600;
+  }
+}
+
+/* "ou" entre o login por senha e o botão do Google */
+.separador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cinza);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--borda);
+  }
+}
+
+.botao-google {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.rodape-auth {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--cinza);
+}
+
+.confirmacao {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Quem está logado, no cabeçalho */
+
+.cabecalho__usuario {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--roxo-claro);
+}
+
+.role {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--roxo);
+  background: var(--roxo-claro);
+}
+
+.sair {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--branco);
+  background: rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.24);
+  }
+}

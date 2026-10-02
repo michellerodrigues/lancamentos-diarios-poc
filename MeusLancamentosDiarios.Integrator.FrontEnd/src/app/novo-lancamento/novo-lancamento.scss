@@ -1,0 +1,182 @@
+.card__rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cinza);
+}
+
+.saldo-valor {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--roxo);
+  line-height: 1;
+}
+
+.atualizacao {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--cinza);
+}
+
+/* Alternador Crédito / Débito */
+
+.alternador {
+  display: flex;
+  gap: 8px;
+  background: var(--bege-claro);
+  border-radius: 999px;
+  padding: 4px;
+
+  &__opcao {
+    flex: 1;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 0;
+    min-height: 44px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cinza);
+    background: transparent;
+    cursor: pointer;
+
+    &--credito-ativo {
+      background: var(--aqua);
+      color: var(--branco);
+    }
+
+    &--debito-ativo {
+      background: var(--vermelho);
+      color: var(--branco);
+    }
+  }
+}
+
+/* Campo de valor: a cor segue o tipo selecionado */
+
+.valor {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--aqua);
+
+  &--debito {
+    color: var(--vermelho);
+  }
+
+  &__prefixo {
+    font-size: 22px;
+    font-weight: 700;
+    color: inherit;
+  }
+
+  &__campo {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-family: inherit;
+    font-size: 28px;
+    font-weight: 700;
+    color: inherit;
+    outline: none;
+
+    &::placeholder {
+      color: var(--placeholder);
+    }
+  }
+}
+
+.campo--texto {
+  resize: none;
+}
+
+/* Confirmação */
+
+.sucesso {
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+
+  &__marca {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background: rgba(21, 162, 157, 0.12);
+    color: var(--aqua);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__titulo {
+    margin: 4px 0 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--tinta);
+  }
+}
+
+.resumo {
+  width: 100%;
+  margin: 8px 0 0;
+  padding: 14px;
+  background: var(--bege-claro);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+
+  &__linha {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+
+    dt {
+      color: var(--cinza);
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 600;
+      color: var(--tinta);
+      text-align: right;
+    }
+  }
+
+  &__credito {
+    color: var(--aqua);
+    font-weight: 700;
+  }
+
+  &__debito {
+    color: var(--vermelho);
+    font-weight: 700;
+  }
+
+  &__observacao {
+    margin: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--bege);
+    font-size: 13px;
+    color: var(--cinza);
+  }
+}
+
+.botao-principal--link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.campo--conta {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,187 @@
+# Stack local da POC.
+#
+#   docker compose up -d --build            tudo em container, para apresentar
+#   docker compose up -d sqlserver pubsub   so a infraestrutura, para rodar os
+#                                           processos .NET com dotnet run
+#
+# Mesmo motor que o GCP: SQL Server aqui, Cloud SQL for SQL Server la. Um dialeto
+# so, um caminho de codigo, e o que roda local e o que roda em producao.
+#
+# As imagens da WebApi, do Events e do Consumer sao as mesmas que vao para o Cloud
+# Run. O que muda entre aqui e la esta todo nas variaveis de ambiente abaixo.
+
+x-banco: &banco
+  Banco__ConnectionString: "Server=sqlserver,1433;Database=Lancamentos;User Id=sa;Password=Lancamentos@2026;TrustServerCertificate=True;"
+
+x-pubsub: &pubsub
+  PUBSUB_EMULATOR_HOST: "pubsub:8085"
+  PubSub__ProjectId: "meuslancamentosdiarios-local"
+
+# A WebApi assina o JWT e o BFF valida com a mesma chave. So para o ambiente local:
+# no GCP ela vem do Secret Manager.
+x-jwt: &jwt
+  Auth__Jwt__Chave: "chave-local-da-poc-lancamentos-nao-use-em-producao"
+
+# A imagem aspnet nao traz curl nem wget, mas traz bash, e o /dev/tcp do bash basta
+# para um GET no /health.
+x-health-http: &health-http
+  test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /health HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q ok <&3"]
+  interval: 5s
+  timeout: 3s
+  retries: 12
+  start_period: 10s
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: lancamentos-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Lancamentos@2026"
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-dados:/var/opt/mssql
+    healthcheck:
+      # -C confia no certificado autoassinado do container.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  # Emulador do Google Cloud Pub/Sub.
+  #
+  # Os clientes do Google usam EmulatorDetection.EmulatorOrProduction: com a variavel
+  # PUBSUB_EMULATOR_HOST definida eles falam com este container; sem ela, vao para o
+  # Pub/Sub real. Nenhuma linha de codigo muda entre um caso e outro.
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    container_name: lancamentos-pubsub
+    command: >
+      gcloud beta emulators pubsub start
+      --project=meuslancamentosdiarios-local
+      --host-port=0.0.0.0:8085
+    ports:
+      - "8085:8085"
+    healthcheck:
+      # A raiz do emulador responde "Ok" quando ele esta pronto para receber chamadas.
+      test: ["CMD", "curl", "-sf", "http://localhost:8085"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  # SMTP de mentira: guarda todo e-mail enviado e mostra em http://localhost:8025.
+  # E onde chega o link de "esqueci a senha".
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: lancamentos-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  # A WebApi sobe primeiro e e a unica que cria banco e esquema. O script e
+  # idempotente, mas nao protege contra tres processos criando o banco no mesmo
+  # instante. Como ela so responde /health depois de garantir o esquema, quem
+  # depende de "webapi saudavel" encontra tudo pronto.
+  webapi:
+    build:
+      context: .
+      dockerfile: MeusLancamentosDiarios.Integrator.WebApi/Dockerfile
+    image: lancamentos/webapi
+    container_name: lancamentos-webapi
+    environment:
+      <<: [*banco, *pubsub, *jwt]
+      # A imagem roda como Production; aqui o Swagger fica ligado (/swagger).
+      Swagger__Habilitado: "true"
+      # admin@, cliente@ e cliente2@lancamentos.local, senha Demo@2026.
+      Auth__SemearUsuariosDemo: "true"
+      Auth__Email__Host: "mailpit"
+      Auth__Email__Porta: "1025"
+      # Vazio desliga o botao do Google. Para ligar, ponha GOOGLE_CLIENT_ID num .env
+      # ao lado deste arquivo.
+      Auth__Google__ClientId: "${GOOGLE_CLIENT_ID:-}"
+    ports:
+      - "5101:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    healthcheck: *health-http
+    restart: unless-stopped
+
+  bff:
+    build:
+      context: .
+      dockerfile: MeusLancamentosDiarios.Integrator.Bff/Dockerfile
+    image: lancamentos/bff
+    container_name: lancamentos-bff
+    environment:
+      <<: *jwt
+      WebApi__BaseUrl: "http://webapi:8080"
+      Swagger__Habilitado: "true"
+    ports:
+      - "5100:8080"
+    depends_on:
+      webapi:
+        condition: service_healthy
+    healthcheck: *health-http
+    restart: unless-stopped
+
+  # Mesma imagem do Cloud Run Job. La ela roda um ciclo e encerra, disparada pelo
+  # Cloud Scheduler; aqui fica em loop, como o RelayWorker local.
+  events:
+    build:
+      context: .
+      dockerfile: MeusLancamentosDiarios.Integrator.Events/Dockerfile
+    image: lancamentos/events
+    container_name: lancamentos-events
+    environment:
+      <<: [*banco, *pubsub]
+      Relay__LoopContinuo: "true"
+      # O emulador sobe vazio e aqui nao ha Terraform: a aplicacao cria topico e
+      # subscription.
+      PubSub__CriarRecursos: "true"
+    depends_on:
+      webapi:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+    restart: unless-stopped
+
+  consumer:
+    build:
+      context: .
+      dockerfile: MeusLancamentosDiarios.Integrator.Consumer/Dockerfile
+    image: lancamentos/consumer
+    container_name: lancamentos-consumer
+    environment:
+      <<: [*banco, *pubsub]
+      PubSub__CriarRecursos: "true"
+    depends_on:
+      webapi:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # O navegador chama o BFF em localhost:5100, por isso as portas no host sao as
+  # mesmas do dotnet run.
+  frontend:
+    build: ./MeusLancamentosDiarios.Integrator.FrontEnd
+    image: lancamentos/frontend
+    container_name: lancamentos-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      bff:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  sqlserver-dados:

@@ -1,0 +1,168 @@
+<div class="tela">
+  <header class="cabecalho cabecalho--com-voltar">
+    <a class="voltar" routerLink="/" aria-label="Voltar para o saldo consolidado">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </a>
+    <h1 class="cabecalho__titulo">Novo Lançamento</h1>
+  </header>
+
+  <main class="conteudo">
+    @if (criado(); as lancamento) {
+      <!-- CONFIRMAÇÃO -->
+      <section class="card sucesso">
+        <span class="sucesso__marca">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
+
+        <h2 class="sucesso__titulo">Lançamento incluído com sucesso!</h2>
+
+        <dl class="resumo">
+          <div class="resumo__linha">
+            <dt>Conta</dt>
+            <dd>{{ lancamento.contaId }} &middot; nº {{ lancamento.sequencia }}</dd>
+          </div>
+          <div class="resumo__linha">
+            <dt>Tipo</dt>
+            <dd>{{ lancamento.tipoRotulo }}</dd>
+          </div>
+          <div class="resumo__linha">
+            <dt>Valor</dt>
+            <dd [class.resumo__debito]="ehDebito()" [class.resumo__credito]="!ehDebito()">
+              {{ lancamento.sinal }} {{ lancamento.valorFormatado }}
+            </dd>
+          </div>
+          <div class="resumo__linha">
+            <dt>Data do lançamento</dt>
+            <dd>{{ lancamento.dataLancamentoFormatada }}</dd>
+          </div>
+          <div class="resumo__linha">
+            <dt>Data de registro</dt>
+            <dd>{{ lancamento.dataRegistroFormatada }}</dd>
+          </div>
+          <div class="resumo__linha">
+            <dt>Situação</dt>
+            <dd>{{ lancamento.stageRotulo }}</dd>
+          </div>
+
+          @if (lancamento.observacao) {
+            <p class="resumo__observacao">{{ lancamento.observacao }}</p>
+          }
+        </dl>
+      </section>
+
+      <!-- Saldo consolidado: segue inalterado até o Consumer processar -->
+      @if (saldo(); as dados) {
+        <section class="card">
+          <div class="card__rotulo">Saldo consolidado</div>
+          <div class="saldo-valor">{{ dados.saldoConsolidadoFormatado }}</div>
+          <div class="atualizacao">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <polyline points="12 7 12 12 15 14" />
+            </svg>
+            <span>Última atualização: {{ dados.ultimaAtualizacaoFormatada }}</span>
+          </div>
+        </section>
+
+        @if (dados.consolidacaoEmAndamento) {
+          <aside class="aviso" role="status">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--roxo)"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span>
+              Consolidação em andamento. O saldo consolidado pode levar alguns
+              segundos para refletir os últimos lançamentos.
+            </span>
+          </aside>
+        }
+      }
+
+      <a class="botao-principal botao-principal--link" routerLink="/">Voltar para o saldo</a>
+    } @else {
+      <!-- FORMULÁRIO -->
+      <section class="card formulario">
+        <label class="rotulo-campo" for="conta">Conta</label>
+        <input id="conta"
+               class="campo campo--conta"
+               type="text"
+               maxlength="20"
+               autocomplete="off"
+               placeholder="ABC1234"
+               [readOnly]="!isAdmin()"
+               [value]="contaId()"
+               (input)="aoDigitarConta($event)">
+
+        <span class="rotulo-campo">Tipo de lançamento</span>
+
+        <div class="alternador" role="group" aria-label="Tipo de lançamento">
+          <button type="button"
+                  class="alternador__opcao"
+                  [class.alternador__opcao--credito-ativo]="!ehDebito()"
+                  [attr.aria-pressed]="!ehDebito()"
+                  (click)="selecionarTipo('Credito')">Crédito</button>
+
+          <button type="button"
+                  class="alternador__opcao"
+                  [class.alternador__opcao--debito-ativo]="ehDebito()"
+                  [attr.aria-pressed]="ehDebito()"
+                  (click)="selecionarTipo('Debito')">Débito</button>
+        </div>
+
+        <label class="rotulo-campo" for="valor">Valor</label>
+        <div class="valor" [class.valor--debito]="ehDebito()">
+          <span class="valor__prefixo">R$</span>
+          <input id="valor"
+                 class="valor__campo"
+                 type="text"
+                 inputmode="decimal"
+                 placeholder="0,00"
+                 autocomplete="off"
+                 [value]="valorTexto()"
+                 (input)="aoDigitarValor($event)">
+        </div>
+
+        <label class="rotulo-campo" for="data">Data do lançamento</label>
+        <input id="data"
+               class="campo"
+               type="date"
+               [max]="hoje"
+               [value]="dataLancamento()"
+               (input)="aoDigitarData($event)">
+
+        <label class="rotulo-campo" for="observacao">Observação</label>
+        <textarea id="observacao"
+                  class="campo campo--texto"
+                  rows="3"
+                  maxlength="200"
+                  placeholder="Identificação do lançamento"
+                  [value]="observacao()"
+                  (input)="aoDigitarObservacao($event)"></textarea>
+      </section>
+
+      @if (erros().length > 0) {
+        <div class="erros" role="alert">
+          @for (erro of erros(); track erro) {
+            <p class="erros__item">{{ erro }}</p>
+          }
+        </div>
+      }
+
+      <button type="button"
+              class="botao-principal"
+              [disabled]="!podeEnviar()"
+              (click)="incluir()">
+        {{ enviando() ? 'Incluindo…' : 'Incluir lançamento' }}
+      </button>
+    }
+  </main>
+</div>

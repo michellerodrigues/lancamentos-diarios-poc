@@ -1,0 +1,142 @@
+<div class="tela">
+  <header class="cabecalho">
+    <div class="cabecalho__linha">
+      <span class="cabecalho__rotulo">Conta corrente</span>
+
+      <!-- O cliente tem uma conta só, a do login. O admin pode olhar qualquer uma. -->
+      @if (isAdmin()) {
+        <input class="conta-campo"
+               type="text"
+               maxlength="20"
+               autocomplete="off"
+               list="contas-conhecidas"
+               aria-label="Conta em foco"
+               [value]="conta()"
+               (change)="aoTrocarConta($event)">
+        <datalist id="contas-conhecidas">
+          @for (opcao of contas(); track opcao) {
+            <option [value]="opcao"></option>
+          }
+        </datalist>
+      } @else {
+        <span class="conta-campo conta-campo--fixa">{{ conta() }}</span>
+      }
+    </div>
+    <h1 class="cabecalho__titulo">Saldo Consolidado</h1>
+
+    <div class="cabecalho__usuario">
+      <span>
+        {{ usuario()?.nome }}
+        @if (isAdmin()) {
+          <span class="role">Admin</span>
+        }
+      </span>
+      <button type="button" class="sair" (click)="sair()">Sair</button>
+    </div>
+  </header>
+
+  <main class="conteudo">
+    @if (saldo(); as dados) {
+      <!-- Saldo consolidado -->
+      <section class="card">
+        <div class="card__rotulo">Saldo consolidado</div>
+        <div class="saldo-valor">{{ dados.saldoConsolidadoFormatado }}</div>
+
+        <div class="atualizacao">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <polyline points="12 7 12 12 15 14" />
+          </svg>
+          <span>Última atualização: {{ dados.ultimaAtualizacaoFormatada }}</span>
+        </div>
+
+        @if (dados.ultimaSequenciaConsolidada > 0) {
+          <div class="ate-sequencia">
+            Consolidado até o lançamento nº {{ dados.ultimaSequenciaConsolidada }} desta conta.
+          </div>
+        }
+
+        @if (offline()) {
+          <div class="offline">Sem conexão. Mostrando o último saldo recebido.</div>
+        }
+      </section>
+
+      <!-- Lançamentos pendentes -->
+      @if (dados.pendentes.length > 0) {
+        <section class="card">
+          <h2 class="card__titulo">Lançamentos pendentes de consolidação</h2>
+
+          <ul class="pendentes">
+            @for (pendente of dados.pendentes; track pendente.id) {
+              <li class="pendente">
+                <span class="pendente__icone" [class.pendente__icone--credito]="pendente.tipo === 'Credito'">
+                  @if (pendente.tipo === 'Credito') {
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="12" y1="19" x2="12" y2="5" />
+                      <polyline points="6 11 12 5 18 11" />
+                    </svg>
+                  } @else {
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <polyline points="18 13 12 19 6 13" />
+                    </svg>
+                  }
+                </span>
+
+                <span class="pendente__texto">
+                  <span class="pendente__tipo">
+                    <span class="pendente__seq">#{{ pendente.sequencia }}</span>
+                    {{ pendente.tipoRotulo }}
+                  </span>
+                  <span class="pendente__estagio">{{ pendente.stageRotulo }}</span>
+                </span>
+
+                <span class="pendente__valor"
+                      [class.pendente__valor--credito]="pendente.tipo === 'Credito'">
+                  {{ pendente.sinal }} {{ pendente.valorFormatado }}
+                </span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <!-- Saldo projetado -->
+      <section class="projetado">
+        <span class="projetado__rotulo">Saldo projetado</span>
+        <span class="projetado__valor">{{ dados.saldoProjetadoFormatado }}</span>
+      </section>
+
+      <!-- Aviso de consolidação -->
+      @if (dados.consolidacaoEmAndamento) {
+        <aside class="aviso" role="status">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--roxo)"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <span>
+            Consolidação em andamento. O saldo consolidado pode levar alguns
+            segundos para refletir os últimos lançamentos.
+          </span>
+        </aside>
+      }
+    } @else if (carregando()) {
+      <p class="estado-vazio">Carregando saldo…</p>
+    } @else {
+      <p class="estado-vazio">Não foi possível carregar o saldo.</p>
+    }
+  </main>
+
+  <a class="fab" routerLink="/novo-lancamento" aria-label="Registrar novo lançamento">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  </a>
+</div>

@@ -1,0 +1,55 @@
+<div class="tela">
+  <header class="cabecalho cabecalho--com-voltar">
+    <a class="voltar" routerLink="/entrar" aria-label="Voltar para o login">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
+    </a>
+    <h1 class="cabecalho__titulo">Esqueci a senha</h1>
+  </header>
+
+  <main class="conteudo">
+    @if (enviado()) {
+      <section class="card" role="status">
+        <!-- A mesma mensagem com ou sem cadastro: a tela não conta quais e-mails existem. -->
+        <p class="confirmacao">
+          Se houver uma conta com <strong>{{ email() }}</strong>, enviamos um link para
+          redefinir a senha. Ele vale por 30 minutos e só pode ser usado uma vez.
+        </p>
+      </section>
+
+      <a class="botao-principal botao-principal--link" routerLink="/entrar">Voltar para o login</a>
+    } @else {
+      <form class="formulario-auth" (submit)="enviar($event)">
+        <section class="card formulario">
+          <p class="confirmacao">
+            Informe o e-mail da sua conta. Enviaremos um link para você criar uma senha nova.
+          </p>
+
+          <label class="rotulo-campo" for="email">E-mail</label>
+          <input id="email"
+                 class="campo"
+                 type="email"
+                 inputmode="email"
+                 autocomplete="email"
+                 placeholder="voce@exemplo.com"
+                 [value]="email()"
+                 (input)="aoDigitarEmail($event)">
+        </section>
+
+        @if (erros().length > 0) {
+          <div class="erros" role="alert">
+            @for (erro of erros(); track erro) {
+              <p class="erros__item">{{ erro }}</p>
+            }
+          </div>
+        }
+
+        <button type="submit" class="botao-principal" [disabled]="!podeEnviar()">
+          {{ enviando() ? 'Enviando…' : 'Enviar link' }}
+        </button>
+      </form>
+    }
+  </main>
+</div>

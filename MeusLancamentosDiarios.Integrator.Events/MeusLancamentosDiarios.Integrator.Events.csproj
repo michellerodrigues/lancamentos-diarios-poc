@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>MeusLancamentosDiarios.Integrator.Events</RootNamespace>
+    <UserSecretsId>meuslancamentosdiarios-events</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeusLancamentosDiarios.Integrator.Common\MeusLancamentosDiarios.Integrator.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.86" />
+    <PackageReference Include="Google.Cloud.PubSub.V1" Version="3.38.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Detalhes internos ficam visiveis ao projeto de teste correspondente, para
+         nao precisar tornar publico o que so existe por razao de implementacao. -->
+    <InternalsVisibleTo Include="MeusLancamentosDiarios.Integrator.Events.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,50 @@
+<div class="tela">
+  <header class="cabecalho">
+    <span class="cabecalho__rotulo">Lançamentos Diários</span>
+    <h1 class="cabecalho__titulo">Entrar</h1>
+  </header>
+
+  <main class="conteudo">
+    <form class="formulario-auth" (submit)="entrar($event)">
+      <section class="card formulario">
+        <label class="rotulo-campo" for="email">E-mail</label>
+        <input id="email"
+               class="campo"
+               type="email"
+               inputmode="email"
+               autocomplete="email"
+               placeholder="voce@exemplo.com"
+               [value]="email()"
+               (input)="aoDigitarEmail($event)">
+
+        <label class="rotulo-campo" for="senha">Senha</label>
+        <input id="senha"
+               class="campo"
+               type="password"
+               autocomplete="current-password"
+               [value]="senha()"
+               (input)="aoDigitarSenha($event)">
+
+        <a class="link link--direita" routerLink="/esqueci-senha">Esqueci a senha</a>
+      </section>
+
+      @if (erros().length > 0) {
+        <div class="erros" role="alert">
+          @for (erro of erros(); track erro) {
+            <p class="erros__item">{{ erro }}</p>
+          }
+        </div>
+      }
+
+      <button type="submit" class="botao-principal" [disabled]="!podeEnviar()">
+        {{ enviando() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <app-botao-google texto="signin_with" (credencial)="entrarComGoogle($event)" />
+
+    <p class="rodape-auth">
+      Ainda não tem conta? <a class="link" routerLink="/cadastro">Criar conta</a>
+    </p>
+  </main>
+</div>

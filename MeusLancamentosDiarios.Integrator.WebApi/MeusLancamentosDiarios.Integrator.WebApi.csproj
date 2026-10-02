@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeusLancamentosDiarios.Integrator.Common\MeusLancamentosDiarios.Integrator.Common.csproj" />
+    <ProjectReference Include="..\MeusLancamentosDiarios.Integrator.Messages\MeusLancamentosDiarios.Integrator.Messages.csproj" />
+    <ProjectReference Include="..\MeusLancamentosDiarios.Integrator.Events\MeusLancamentosDiarios.Integrator.Events.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.77.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Detalhes internos ficam visiveis ao projeto de teste correspondente, para
+         nao precisar tornar publico o que so existe por razao de implementacao. -->
+    <InternalsVisibleTo Include="MeusLancamentosDiarios.Integrator.WebApi.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+  <!-- O .Events tambem e executavel e tem appsettings.json proprio. Pela referencia
+       de projeto ele viria junto no publish e disputaria o caminho com o desta
+       aplicacao (NETSDK1152). Fica so o daqui. -->
+  <Target Name="IgnorarAppsettingsDasReferencias" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('appsettings')) and '%(ResolvedFileToPublish.RootDir)%(ResolvedFileToPublish.Directory)' != '$([MSBuild]::EnsureTrailingSlash($(MSBuildProjectDirectory)))'" />
+    </ItemGroup>
+  </Target>
+
+</Project>
