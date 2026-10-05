@@ -33,6 +33,7 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/kumbh-sans/index.css",
               "src/styles.scss"
             ]
           },
@@ -92,6 +93,7 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/kumbh-sans/index.css",
               "src/styles.scss"
             ]
           }

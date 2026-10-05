@@ -45,6 +45,32 @@ Derivados, porque o site não tem o equivalente:
 Tudo passa em AA para texto normal (4,5:1). O branco sobre magenta fica no limite, e por
 isso o magenta só aparece em botão de ícone, nunca atrás de texto corrido.
 
+## Tipografia
+
+A fonte é a **Kumbh Sans**, sob a SIL Open Font License 1.1, que permite usar e
+redistribuir. Ela substituiu a Azo Sans, que é paga e não pode ficar num repositório
+público.
+
+A escolha foi por medição. Cada letra e algarismo (a–z, A–Z, 0–9, ç, ã, é, õ, R$) foi
+desenhado na Azo Sans e em 20 fontes livres do Google Fonts, nos pesos 400 e 700. Depois,
+mediu-se quanto de cada desenho coincide com o da Azo. As cinco mais próximas:
+
+| Fonte | Coincide com a Azo | Largura (400 / 700) | Altura do x |
+|---|---|---|---|
+| **Kumbh Sans** | 78,3% | 98% / 97% | 100% |
+| Lato | 76,3% | 94% / 94% | 104% |
+| Outfit | 75,9% | 95% / 96% | 98% |
+| Figtree | 75,8% | 96% / 96% | 102% |
+| Nunito Sans | 73,9% | 98% / 99% | 100% |
+
+Como a largura e a altura do x são praticamente as da Azo, os textos ocupam o mesmo espaço,
+e nenhum layout precisou mudar.
+
+| Onde | Como carrega |
+|---|---|
+| Front | Pacote `@fontsource-variable/kumbh-sans`, ligado em `angular.json` > `styles`. Os arquivos vão no build, em `media/`, e o service worker os guarda: o PWA continua com a fonte offline. É uma fonte variável, então os pesos 400, 500, 600 e 700 vêm do mesmo arquivo. O token é `--fonte`, no `:root` de `styles.scss`. |
+| Documento de arquitetura | Google Fonts, pesos 400, 500 e 700. Sem internet, cai na Nunito Sans ou na Segoe UI. |
+
 ## Ícones do PWA
 
 Os ícones de `public/icons` e o `favicon.ico` substituem o logo padrão do Angular:

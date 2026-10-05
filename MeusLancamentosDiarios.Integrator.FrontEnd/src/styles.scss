@@ -1,6 +1,8 @@
 /* Identidade visual da POC: o esquema de cores de carrefoursolucoes.com.br,
    medido no site em 02/10/2026 (ver docs/identidade-visual.md).
-   Azo Sans e a fonte principal; os fallbacks cobrem quem nao a tem instalada. */
+   Fonte: Kumbh Sans (SIL OFL), a livre mais proxima da Azo Sans. Vem do pacote
+   @fontsource-variable/kumbh-sans (angular.json > styles), entao vai no build e o
+   PWA a guarda para uso offline. */
 
 :root {
   /* Do site */
@@ -35,7 +37,7 @@
   --sombra-card: 0 2px 12px rgba(14, 37, 101, 0.08);
   --raio-card: 16px;
 
-  --fonte: 'Azo Sans', 'Nunito Sans', 'Source Sans 3', 'Segoe UI',
+  --fonte: 'Kumbh Sans Variable', 'Kumbh Sans', 'Nunito Sans', 'Segoe UI',
     -apple-system, BlinkMacSystemFont, sans-serif;
 }
 

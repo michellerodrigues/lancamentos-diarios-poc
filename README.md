@@ -238,6 +238,11 @@ Para apresentar, ou para rodar sem .NET nem Node na máquina — só Docker:
 
 ```bash
 docker compose up -d --build     # http://localhost:4200
+
+# em caso de reset, rodar antes do up:
+docker system df       # quanto ocupam imagens, containers, volumes e cache de build
+docker system prune    # apaga containers parados, redes sem uso, imagens sem tag e cache de build
+docker builder prune   # só o cache de build, sem mexer nos containers
 ```
 
 Sobe os oito containers: SQL Server, emulador do Pub/Sub, Mailpit, WebApi, BFF, Events,
@@ -269,6 +274,48 @@ com `Relay__LoopContinuo=false`); o `docker-compose.yml` sobrescreve por variáv
 ambiente o que muda no local. É a mesma imagem nos dois lados.
 
 `docker compose down` para tudo e mantém os saldos; `docker compose down -v` zera.
+
+### Dados de demonstração
+
+O [`scripts/inicializar-banco-demo.ps1`](scripts/inicializar-banco-demo.ps1) deixa o banco
+pronto para apresentar: lança uma semana de movimento em três contas e espera tudo
+consolidar.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\inicializar-banco-demo.ps1
+```
+
+| Conta | Quem entra | Movimento lançado | Saldo |
+|---|---|---|---|
+| `ABC1234` | `cliente@lancamentos.local` | padaria: vendas, fornecedor, aluguel, salários | R$ 9.164,88 |
+| `XYZ9999` | `cliente2@lancamentos.local` | oficina: serviços, peças, folha de pagamento | R$ 3.138,50 |
+| `ADM0001` | `admin@lancamentos.local` | aporte inicial e licenças | R$ 8.750,00 |
+
+O script passa pelo caminho da aplicação, sem escrever direto no banco: login do admin,
+`POST /lancamentos/lote`, relay, Pub/Sub e Consumer. No fim, confere o saldo de cada
+conta contra a soma esperada. Leva uns 30 s, porque o relay publica um lançamento por
+conta a cada ciclo. As datas vão de seis dias atrás até hoje, porque a WebApi recusa
+data futura. A tela mostra o saldo de cada conta, não a lista de lançamentos. Para
+mostrar a consolidação ao vivo, rode o script na apresentação e recarregue a tela logo
+depois do passo 3: a lista de pendentes esvazia na ordem da conta.
+
+Rodar de novo é seguro. Se o movimento de demonstração já estiver no banco, o script só
+espera e confere; se as contas tiverem outro movimento, ele para sem lançar nada. Serve
+para as duas formas de rodar, já que a WebApi atende em `:5101` nas duas.
+
+Para recomeçar do zero, na stack do Docker:
+
+```powershell
+# apaga o banco inteiro, inclusive os cadastros feitos pela tela; pede confirmação
+powershell -ExecutionPolicy Bypass -File .\scripts\inicializar-banco-demo.ps1 -Zerar
+```
+
+O `-Zerar` faz o `docker compose down -v` e sobe a stack outra vez. Os e-mails do
+Mailpit também somem, porque ele não tem volume. A confirmação mostra as contas
+cadastradas pela tela que vão junto, e o padrão é não apagar.
+
+O `-ExecutionPolicy Bypass` existe porque o Windows bloqueia scripts por padrão. Ele
+vale só para esse comando e não muda a política da máquina.
 
 ### Desenvolvimento com `dotnet run`
 
@@ -494,6 +541,12 @@ lançamento) e o degradê do destaque no saldo projetado. Os tokens têm nome de
 valor negativo; o magenta do site é de ação, não de alerta. Na lista de pendentes o
 débito fica em cinza.
 
+**Fonte Kumbh Sans.** Livre (SIL OFL) e a mais próxima da Azo Sans, que é paga e não pode
+ficar num repositório público. A escolha foi por medição, entre 20 fontes do Google Fonts.
+No front ela vem do pacote `@fontsource-variable/kumbh-sans`, então vai no build e o PWA
+funciona offline com ela; no documento de arquitetura, vem do Google Fonts. Detalhes em
+[docs/identidade-visual.md](docs/identidade-visual.md#tipografia).
+
 ## Indo para o GCP
 
 ### Vindo da AWS
@@ -507,10 +560,32 @@ débito fica em cinza.
 | SNS / SQS | Pub/Sub | tópico e fila |
 | SQS → Lambda | Pub/Sub *push* → Cloud Run Service | entrega por HTTP, escala a zero |
 | ECS / Fargate (serviço) | Cloud Run Service `min-instances ≥ 1` | processo sempre ligado |
+| ALB + certificado do ACM | **Load Balancer HTTPS externo** | uma porta só: `/` para o front, `/api/*` para o BFF |
+| CloudFront + S3 | Load Balancer + nginx no Cloud Run | servir o build do Angular |
+| API Gateway (HTTP API) | API Gateway ou Apigee | só na frente do BFF: limite de requisições e JWT na borda |
 
 Para .NET, **Cloud Run Job** é a escolha em cima de Cloud Functions: o Job roda o
 container que você já tem, enquanto Cloud Functions obrigaria a reescrever o projeto no
 formato de função.
+
+**ALB ou API Gateway na porta de entrada.** O Load Balancer do desenho serve o front e
+o BFF no mesmo domínio, sem CORS. Na AWS, a tradução direta é o ALB, com regra por
+caminho. O API Gateway cobre só a metade da API. Para usá-lo, o desenho vira CloudFront
+com o domínio, `/` num bucket S3 com o build do Angular, que dispensa o nginx, e `/api/*`
+no API Gateway, que chega ao BFF no ECS por um VPC Link. A WebApi continua fora da
+internet nos dois casos.
+
+O API Gateway acrescenta limite de requisições por rota e cobrança por requisição, mais
+barata que um ALB parado numa demo de pouco tráfego. A validação do JWT na borda não
+funciona com o token de hoje. O validador do HTTP API só recebe `issuer` e `audience`,
+busca as chaves públicas no JWKS do emissor e só aceita algoritmos de chave pública,
+como o RS256. Não há onde colocar a chave HS256 compartilhada. As saídas são três:
+- um Lambda authorizer, que vira o terceiro lugar com a chave;
+- migrar para RS256, com o JWKS publicado num endereço HTTPS público;
+- deixar a validação só no BFF e na WebApi, como hoje.
+
+Sem limite de requisições como requisito, o ALB basta, porque o BFF já confere token,
+role e conta.
 
 ### `.Events` — Cloud Scheduler → Cloud Run Job
 
