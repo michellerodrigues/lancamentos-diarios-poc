@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    participant BFF as BFF (Frontend)
+    participant JWT as JWT (Token Passado na Request)
+    participant BE as Backend (API)
+
+    Note over BFF, BE: Ambos possuem a MESMA Chave Secreta Guardada (Simétrica)
+
+    rect rgb(240, 248, 255)
+    Note over BFF: 1. GERAÇÃO (Criação)
+    BFF->>BFF: Dados Legíveis + Chave Secreta = Assinatura (HS256)
+    end
+    
+    BFF->>BE: 2. Envia JWT no Header (Authorization: Bearer xxx)
+    
+    rect rgb(245, 245, 220)
+    Note over BE: 3. VALIDAÇÃO (Verificação)
+    BE->>BE: Dados do JWT + Mesma Chave Secreta = Nova Assinatura
+    BE->>BE: Nova Assinatura == Assinatura do Token?
+    end
+    
+    Note over BE: ✅ Se igual: Token é autêntico e confiável!

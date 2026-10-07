@@ -10,6 +10,13 @@ Stack: **.NET 9** (Minimal API + CQRS + FluentValidation + Dapper), **SQL Server
 Mesmo motor local e em produção: SQL Server em container aqui, Cloud SQL for SQL
 Server no GCP. Um dialeto só, um caminho de código.
 
+Documentos: [arquitetura](<docs/Arquitetura dos Lançamentos Diários.md>) ·
+[requisitos funcionais](docs/requisitos-funcionais.md) ·
+[requisitos não funcionais](docs/requisitos-nao-funcionais.md) ·
+[cobertura dos testes](docs/cobertura-de-testes.md) ·
+[capacidade do relay](docs/capacidade-do-relay.md) ·
+[identidade visual](docs/identidade-visual.md)
+
 ---
 
 ## O fluxo
@@ -458,9 +465,13 @@ saldo detalha `Saldo:LimitePendentesPadrao` pendentes (20) quando a chamada não
 dotnet test
 ```
 
+São 298 testes de unidade, com 40% das linhas cobertas. O comando hoje termina com
+código 1 mesmo com todos passando, por causa do `.TestSupport`. A causa, a correção e o
+que falta testar estão em [docs/cobertura-de-testes.md](docs/cobertura-de-testes.md).
+
 | Projeto de teste | Cobre |
 |---|---|
-| `.Events.Tests` | relay, ordem por conta, backoff, conversão de dinheiro |
+| `.Events.Tests` | relay, ordem por conta, backoff, sinal do valor pelo tipo |
 | `.WebApi.Tests` | criação avulsa e em lote, validators, dispatcher, saldo e limite de pendentes; login, Google, renovação, redefinição de senha, cadastro e posse da conta |
 | `.Bff.Tests` | services, conversores para o payload da tela, repasse do Bearer, roteamento do `/auth` e posse da conta |
 | `.Common.Tests` | `DinheiroHelper` (centavos ↔ reais, arredondamento) e `LancamentoHelper` (formatação pt-BR) |
@@ -490,7 +501,7 @@ de cada um ter a sua cópia do SQL de transição de estágio.
 ## Decisões que valem registro
 
 **Dinheiro em centavos (`bigint`).** `SUM()` sobre ponto flutuante acumularia erro em
-cima de saldo. A conversão fica em `Dinheiro.ParaReais` / `ParaCentavos`.
+cima de saldo. A conversão fica em `DinheiroHelper.ParaReais` / `ParaCentavos`.
 
 **Reserva num comando só.** `WITH candidatos AS (SELECT TOP (n) … WITH (UPDLOCK,
 READPAST, ROWLOCK)) UPDATE … OUTPUT inserted.*` seleciona e marca sem janela entre ler e
