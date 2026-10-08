@@ -11,6 +11,7 @@ Mesmo motor local e em produção: SQL Server em container aqui, Cloud SQL for S
 Server no GCP. Um dialeto só, um caminho de código.
 
 Documentos: [arquitetura](<docs/Arquitetura dos Lançamentos Diários.md>) ·
+[arquitetura de software e de solução](docs/arquitetura/README.md) ·
 [requisitos funcionais](docs/requisitos-funcionais.md) ·
 [requisitos não funcionais](docs/requisitos-nao-funcionais.md) ·
 [cobertura dos testes](docs/cobertura-de-testes.md) ·

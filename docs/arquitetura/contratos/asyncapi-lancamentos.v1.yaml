@@ -1,0 +1,225 @@
+asyncapi: 3.0.0
+
+info:
+  title: Lançamentos Diários — evento de consolidação
+  version: 1.0.0
+  description: |
+    Evento publicado quando um lançamento sai do outbox (a própria linha de
+    LancamentosDiarios) para o Pub/Sub, e consumido pelo Consumer, que aplica o
+    lançamento ao saldo consolidado.
+
+    Quem publica:
+    - a WebApi, logo após o commit, quando a conta não tem lançamento anterior pendente;
+    - o relay do projeto Events, na varredura que recolhe o que ficou para trás.
+
+    Garantias:
+    - Entrega pelo menos uma vez. O Consumer descarta a repetição pelo estágio da linha.
+    - Ordem por conta. A ordering key é o contaId, e a subscription tem a ordenação ligada.
+      A outbox garante que a sequência N só é publicada depois da N-1.
+    - O corpo não é a fonte da verdade. O Consumer usa só o lancamentoId e lê conta,
+      sequência, tipo e valor da linha no banco.
+
+    Escrito à mão a partir do código no commit 45bcd17 (07/10/2026):
+    MeusLancamentosDiarios.Integrator.Events/Contracts/LancamentoRegistradoEvent.cs,
+    EventosJson.cs, Publishing/PubSubPublicador.cs e Publishing/PubSubProvisionador.cs.
+  tags:
+    - name: lancamentos
+    - name: consolidacao
+
+defaultContentType: application/json
+
+servers:
+  gcp:
+    host: pubsub.googleapis.com
+    protocol: googlepubsub
+    description: |
+      Pub/Sub gerenciado, sem PUBSUB_EMULATOR_HOST definida. Tópico e subscription vêm
+      do provisionamento (PubSub:CriarRecursos = false).
+  local:
+    host: localhost:8085
+    protocol: googlepubsub
+    description: |
+      Emulador do docker compose. Guarda tudo em memória: reiniciar o container apaga
+      tópico e subscription. O Events e o Consumer recriam na subida
+      (PubSub:CriarRecursos = true).
+
+channels:
+  lancamentosRegistrados:
+    address: projects/{projectId}/topics/lancamentos-registrados
+    title: Tópico lancamentos-registrados
+    description: |
+      Um tópico com uma única subscription, lancamentos-consolidacao, que funciona como a
+      fila do Consumer. Contas diferentes andam em paralelo; dentro da conta, uma
+      mensagem por vez.
+    parameters:
+      projectId:
+        description: Projeto do GCP. No local, meuslancamentosdiarios-local.
+    messages:
+      lancamentoRegistrado:
+        $ref: '#/components/messages/LancamentoRegistrado'
+    x-subscription:
+      nome: lancamentos-consolidacao
+      tipo: pull
+      enableMessageOrdering: true
+      ackDeadlineSeconds: 60
+      retryPolicy: nenhuma (reentrega imediata após nack) — proposta em 04-integracao-e-contratos.md
+      deadLetterPolicy: nenhuma — proposta em 04-integracao-e-contratos.md
+
+operations:
+  publicarLancamentoRegistrado:
+    action: send
+    channel:
+      $ref: '#/channels/lancamentosRegistrados'
+    title: Publicar lançamento registrado
+    summary: WebApi (imediato) e relay (varredura) publicam com orderingKey = contaId.
+    description: |
+      O publicador só chama o broker depois de reservar a linha (Cadastrado -> Lido) e
+      só marca Enfileirado depois de o broker devolver o id da mensagem. Falhando, chama
+      ResumePublish(contaId) para liberar a chave e devolve a linha para Cadastrado, com
+      espera crescente (2, 4, 8 e 16 s). Na 5ª falha a linha vai para Erro.
+    messages:
+      - $ref: '#/channels/lancamentosRegistrados/messages/lancamentoRegistrado'
+
+  consolidarLancamento:
+    action: receive
+    channel:
+      $ref: '#/channels/lancamentosRegistrados'
+    title: Consolidar lançamento
+    summary: O Consumer recebe pela subscription lancamentos-consolidacao e aplica ao saldo.
+    description: |
+      Ack quando consolidou, quando a mensagem é repetida (a linha já saiu de Lido e de
+      Enfileirado) ou quando o corpo é inválido. Nack quando a consolidação falhou; a
+      linha volta para Enfileirado e, na 5ª tentativa, vai para Erro. Até 20 mensagens
+      em processamento por instância, somando todas as contas.
+    messages:
+      - $ref: '#/channels/lancamentosRegistrados/messages/lancamentoRegistrado'
+
+components:
+  messages:
+    LancamentoRegistrado:
+      name: LancamentoRegistrado
+      title: Lançamento registrado
+      summary: Um lançamento de crédito ou débito pronto para entrar no saldo da conta.
+      contentType: application/json
+      correlationId:
+        description: Id do lançamento. Também vai no atributo lancamentoId.
+        location: $message.payload#/lancamentoId
+      headers:
+        $ref: '#/components/schemas/AtributosDaMensagem'
+      payload:
+        $ref: '#/components/schemas/LancamentoRegistradoEvent'
+      x-ordering-key: contaId
+      examples:
+        - name: debito
+          summary: Débito de R$ 35,90, segundo lançamento da conta XYZ9999.
+          headers:
+            lancamentoId: 0199a7c4-3f2e-7b10-9a51-6d2f0c1e8b44
+            contaId: XYZ9999
+            sequencia: '2'
+            tipo: Debito
+          payload:
+            lancamentoId: 0199a7c4-3f2e-7b10-9a51-6d2f0c1e8b44
+            contaId: XYZ9999
+            sequencia: 2
+            tipo: Debito
+            valorCentavos: 3590
+            dataLancamento: '2026-10-01'
+            dataRegistro: '2026-10-01T13:45:10.1234567+00:00'
+            observacao: tarifa
+        - name: credito-sem-observacao
+          summary: Crédito sem observação. O campo some do corpo, em vez de ir como null.
+          headers:
+            lancamentoId: 0199a7c5-0a11-7c22-8d33-4e55f6a7b8c9
+            contaId: ABC1234
+            sequencia: '14'
+            tipo: Credito
+          payload:
+            lancamentoId: 0199a7c5-0a11-7c22-8d33-4e55f6a7b8c9
+            contaId: ABC1234
+            sequencia: 14
+            tipo: Credito
+            valorCentavos: 98040
+            dataLancamento: '2026-10-07'
+            dataRegistro: '2026-10-07T12:02:41.555+00:00'
+
+  schemas:
+    AtributosDaMensagem:
+      type: object
+      description: |
+        Atributos do Pub/Sub. Servem para filtrar e rastrear sem abrir o corpo. Todo
+        atributo do Pub/Sub é texto, inclusive a sequência.
+      required:
+        - lancamentoId
+        - contaId
+        - sequencia
+        - tipo
+      properties:
+        lancamentoId:
+          type: string
+          format: uuid
+        contaId:
+          type: string
+        sequencia:
+          type: string
+          pattern: '^[1-9][0-9]*$'
+        tipo:
+          type: string
+          enum:
+            - Credito
+            - Debito
+
+    LancamentoRegistradoEvent:
+      type: object
+      description: |
+        JSON com as opções de EventosJson: nomes em camelCase, enums como texto e campos
+        nulos omitidos. Leitor tolerante: campo desconhecido é ignorado, então acrescentar
+        campo opcional não quebra o Consumer.
+      additionalProperties: true
+      required:
+        - lancamentoId
+        - contaId
+        - sequencia
+        - tipo
+        - valorCentavos
+        - dataLancamento
+        - dataRegistro
+      properties:
+        lancamentoId:
+          type: string
+          format: uuid
+          description: Id da linha em LancamentosDiarios (Guid v7). É o que o Consumer usa.
+        contaId:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: '^[A-Z0-9-]+$'
+          description: Conta, em maiúsculas. É também a ordering key da mensagem.
+        sequencia:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Posição do lançamento na conta, contínua a partir de 1.
+        tipo:
+          type: string
+          enum:
+            - Credito
+            - Debito
+          description: O sinal do valor vem daqui.
+        valorCentavos:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 100000000
+          description: Valor absoluto em centavos. Teto de R$ 1.000.000,00 por lançamento.
+        dataLancamento:
+          type: string
+          format: date
+          description: Data de competência informada pelo usuário (yyyy-MM-dd). Nunca futura no fuso de São Paulo.
+        dataRegistro:
+          type: string
+          format: date-time
+          description: Carimbo do sistema na gravação, em UTC (offset +00:00).
+        observacao:
+          type: string
+          maxLength: 200
+          description: Opcional. Ausente do corpo quando nula.

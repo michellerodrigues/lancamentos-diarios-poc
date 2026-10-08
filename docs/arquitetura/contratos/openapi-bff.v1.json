@@ -1,0 +1,837 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MeusLancamentosDiarios.Integrator.Bff | v1",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5100/"
+    }
+  ],
+  "paths": {
+    "/api/auth/eu": {
+      "get": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "O dono do token, com a conta e a role.",
+        "description": "**Acesso:** ClienteOuAdmin.",
+        "operationId": "UsuarioAtual",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/registrar": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Cadastro com e-mail e senha. Ja devolve a sessao.",
+        "operationId": "Registrar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarUsuarioCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Entra com e-mail e senha.",
+        "operationId": "Login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Entra com a credencial do botao do Google.",
+        "operationId": "LoginGoogle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginGoogleCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/renovar": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Troca o token de renovacao por um par novo. O antigo deixa de valer.",
+        "operationId": "RenovarSessao",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenovarSessaoCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sair": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Logout: revoga o token de renovacao.",
+        "operationId": "Sair",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EncerrarSessaoCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/esqueci-senha": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Manda o link de redefinicao por e-mail, se houver cadastro.",
+        "operationId": "EsqueciSenha",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitarRedefinicaoSenhaCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/redefinir-senha": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Define a senha nova com o token do e-mail.",
+        "operationId": "RedefinirSenha",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedefinirSenhaCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/config": {
+      "get": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Client ID do Google para a tela de login; vazio esconde o botao.",
+        "operationId": "ConfiguracaoAuth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracaoAuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/saldo/{contaId}": {
+      "get": {
+        "tags": [
+          "Telas"
+        ],
+        "summary": "Tudo que a tela de Saldo Consolidado precisa, num payload so.",
+        "description": "**Acesso:** ClienteOuAdmin + posse da conta.",
+        "operationId": "SaldoDaTela",
+        "parameters": [
+          {
+            "name": "contaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaldoTela"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/contas": {
+      "get": {
+        "tags": [
+          "Telas"
+        ],
+        "summary": "Contas ja usadas, para o seletor da tela do admin.",
+        "description": "**Acesso:** ClienteOuAdmin + SomenteAdmin.",
+        "operationId": "ListarContas",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/lancamentos": {
+      "post": {
+        "tags": [
+          "Telas"
+        ],
+        "summary": "Inclui o lancamento na conta. A consolidacao acontece depois.",
+        "description": "**Acesso:** ClienteOuAdmin + posse da conta.",
+        "operationId": "IncluirLancamento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NovoLancamentoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LancamentoCriadoTela"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConfiguracaoAuthResponse": {
+        "required": [
+          "googleClientId"
+        ],
+        "type": "object",
+        "properties": {
+          "googleClientId": {
+            "type": "string"
+          }
+        }
+      },
+      "EncerrarSessaoCommand": {
+        "required": [
+          "tokenRenovacao"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenRenovacao": {
+            "type": "string"
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "LancamentoCriadoTela": {
+        "required": [
+          "id",
+          "contaId",
+          "sequencia",
+          "tipo",
+          "tipoRotulo",
+          "valor",
+          "valorFormatado",
+          "sinal",
+          "dataLancamento",
+          "dataLancamentoFormatada",
+          "dataRegistro",
+          "dataRegistroFormatada",
+          "stage",
+          "stageRotulo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contaId": {
+            "type": "string"
+          },
+          "sequencia": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoLancamentoEnum"
+          },
+          "tipoRotulo": {
+            "type": "string"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double"
+          },
+          "valorFormatado": {
+            "type": "string"
+          },
+          "sinal": {
+            "type": "string"
+          },
+          "dataLancamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "dataLancamentoFormatada": {
+            "type": "string"
+          },
+          "dataRegistro": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dataRegistroFormatada": {
+            "type": "string"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageLancamentoEnum"
+          },
+          "stageRotulo": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginCommand": {
+        "required": [
+          "email",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginGoogleCommand": {
+        "required": [
+          "credencial"
+        ],
+        "type": "object",
+        "properties": {
+          "credencial": {
+            "type": "string"
+          }
+        }
+      },
+      "NovoLancamentoRequest": {
+        "required": [
+          "tipo",
+          "valor",
+          "dataLancamento"
+        ],
+        "type": "object",
+        "properties": {
+          "contaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoLancamentoEnum"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double"
+          },
+          "dataLancamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PendenteTela": {
+        "required": [
+          "id",
+          "sequencia",
+          "tipo",
+          "tipoRotulo",
+          "sinal",
+          "valor",
+          "valorFormatado",
+          "dataLancamento",
+          "dataLancamentoFormatada",
+          "stage",
+          "stageRotulo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequencia": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoLancamentoEnum"
+          },
+          "tipoRotulo": {
+            "type": "string"
+          },
+          "sinal": {
+            "type": "string"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double"
+          },
+          "valorFormatado": {
+            "type": "string"
+          },
+          "dataLancamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "dataLancamentoFormatada": {
+            "type": "string"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageLancamentoEnum"
+          },
+          "stageRotulo": {
+            "type": "string"
+          }
+        }
+      },
+      "RedefinirSenhaCommand": {
+        "required": [
+          "token",
+          "novaSenha"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "novaSenha": {
+            "type": "string"
+          }
+        }
+      },
+      "RegistrarUsuarioCommand": {
+        "required": [
+          "nome",
+          "email",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "RenovarSessaoCommand": {
+        "required": [
+          "tokenRenovacao"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenRenovacao": {
+            "type": "string"
+          }
+        }
+      },
+      "SaldoTela": {
+        "required": [
+          "contaId",
+          "saldoConsolidado",
+          "saldoConsolidadoFormatado",
+          "atualizadoEm",
+          "ultimaAtualizacaoFormatada",
+          "ultimaSequenciaConsolidada",
+          "saldoProjetado",
+          "saldoProjetadoFormatado",
+          "creditosPendentes",
+          "creditosPendentesFormatado",
+          "debitosPendentes",
+          "debitosPendentesFormatado",
+          "consolidacaoEmAndamento",
+          "intervaloPollingMs",
+          "pendentes"
+        ],
+        "type": "object",
+        "properties": {
+          "contaId": {
+            "type": "string"
+          },
+          "saldoConsolidado": {
+            "type": "number",
+            "format": "double"
+          },
+          "saldoConsolidadoFormatado": {
+            "type": "string"
+          },
+          "atualizadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "ultimaAtualizacaoFormatada": {
+            "type": "string"
+          },
+          "ultimaSequenciaConsolidada": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "saldoProjetado": {
+            "type": "number",
+            "format": "double"
+          },
+          "saldoProjetadoFormatado": {
+            "type": "string"
+          },
+          "creditosPendentes": {
+            "type": "number",
+            "format": "double"
+          },
+          "creditosPendentesFormatado": {
+            "type": "string"
+          },
+          "debitosPendentes": {
+            "type": "number",
+            "format": "double"
+          },
+          "debitosPendentesFormatado": {
+            "type": "string"
+          },
+          "consolidacaoEmAndamento": {
+            "type": "boolean"
+          },
+          "intervaloPollingMs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pendentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendenteTela"
+            }
+          }
+        }
+      },
+      "SessaoResponse": {
+        "required": [
+          "tokenAcesso",
+          "expiraEm",
+          "tokenRenovacao",
+          "usuario"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenAcesso": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tokenRenovacao": {
+            "type": "string"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/UsuarioResponse"
+          }
+        }
+      },
+      "SolicitarRedefinicaoSenhaCommand": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "StageLancamentoEnum": {
+        "enum": [
+          "Cadastrado",
+          "Lido",
+          "Enfileirado",
+          "EmProcessamento",
+          "Consolidado",
+          "Erro"
+        ]
+      },
+      "TipoLancamentoEnum": {
+        "enum": [
+          "Credito",
+          "Debito"
+        ]
+      },
+      "UsuarioResponse": {
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "contaId",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "contaId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Cole o tokenAcesso devolvido por POST /api/auth/login.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Autenticacao"
+    },
+    {
+      "name": "Telas"
+    }
+  ]
+}

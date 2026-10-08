@@ -1,0 +1,1124 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "MeusLancamentosDiarios.Integrator.WebApi | v1",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5101/"
+    }
+  ],
+  "paths": {
+    "/auth/eu": {
+      "get": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "O dono do token, com a conta e a role.",
+        "description": "**Acesso:** ClienteOuAdmin.",
+        "operationId": "UsuarioAtual",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/saldo/{contaId}": {
+      "get": {
+        "tags": [
+          "Saldo"
+        ],
+        "summary": "Saldo consolidado da conta, pendentes e saldo projetado.",
+        "description": "**Acesso:** ClienteOuAdmin + posse da conta.",
+        "operationId": "ObterSaldo",
+        "parameters": [
+          {
+            "name": "contaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limitePendentes",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaldoResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/contas": {
+      "get": {
+        "tags": [
+          "Saldo"
+        ],
+        "summary": "Contas que ja receberam algum lancamento.",
+        "description": "**Acesso:** SomenteAdmin.",
+        "operationId": "ListarContas",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/auth/registrar": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Cadastro com e-mail e senha. Cria a conta do usuario e ja devolve a sessao.",
+        "operationId": "Registrar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarUsuarioCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Entra com e-mail e senha.",
+        "operationId": "Login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/google": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Troca o ID token do Google pela sessao. Cadastra no primeiro acesso.",
+        "operationId": "LoginGoogle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginGoogleCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/renovar": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Troca o token de renovacao por um par novo. O antigo deixa de valer.",
+        "operationId": "RenovarSessao",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenovarSessaoCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sair": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Logout: revoga o token de renovacao.",
+        "operationId": "Sair",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EncerrarSessaoCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/esqueci-senha": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Manda o link de redefinicao, se o e-mail tiver cadastro. Local: veja no Mailpit (:8025).",
+        "operationId": "EsqueciSenha",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitarRedefinicaoSenhaCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/redefinir-senha": {
+      "post": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "Define a senha nova com o token do e-mail. Encerra todas as sessoes abertas.",
+        "operationId": "RedefinirSenha",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedefinirSenhaCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/config": {
+      "get": {
+        "tags": [
+          "Autenticacao"
+        ],
+        "summary": "O que a tela de login precisa saber: o Client ID do Google, vazio se desligado.",
+        "operationId": "ConfiguracaoAuth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracaoAuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lancamentos": {
+      "post": {
+        "tags": [
+          "Lancamentos"
+        ],
+        "summary": "Registra um lancamento na conta. A consolidacao e assincrona.",
+        "description": "**Acesso:** ClienteOuAdmin + posse da conta.",
+        "operationId": "CriarLancamento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarLancamentoCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CriarLancamentoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/lancamentos/lote": {
+      "post": {
+        "tags": [
+          "Lancamentos"
+        ],
+        "summary": "Inclui ate 1000 lancamentos, em contas quaisquer, numa transacao so. O relay publica; a tela acompanha a consolidacao.",
+        "description": "**Acesso:** ClienteOuAdmin + SomenteAdmin.",
+        "operationId": "CriarLancamentosEmLote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarLancamentosEmLoteCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CriarLancamentosEmLoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/lancamentos/{id}": {
+      "get": {
+        "tags": [
+          "Lancamentos"
+        ],
+        "summary": "Consulta um lancamento e em que estagio da esteira ele esta.",
+        "description": "**Acesso:** ClienteOuAdmin + posse da conta.",
+        "operationId": "ObterLancamento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LancamentoDetalheResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConfiguracaoAuthResponse": {
+        "required": [
+          "googleClientId"
+        ],
+        "type": "object",
+        "properties": {
+          "googleClientId": {
+            "type": "string"
+          }
+        }
+      },
+      "CriarLancamentoCommand": {
+        "required": [
+          "contaId",
+          "tipo",
+          "valor",
+          "dataLancamento"
+        ],
+        "type": "object",
+        "properties": {
+          "contaId": {
+            "type": "string"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoLancamentoEnum"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double"
+          },
+          "dataLancamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CriarLancamentoResponse": {
+        "required": [
+          "id",
+          "contaId",
+          "sequencia",
+          "tipo",
+          "valor",
+          "dataLancamento",
+          "dataRegistro",
+          "stage"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contaId": {
+            "type": "string"
+          },
+          "sequencia": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoLancamentoEnum"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double"
+          },
+          "dataLancamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "dataRegistro": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageLancamentoEnum"
+          }
+        }
+      },
+      "CriarLancamentosEmLoteCommand": {
+        "required": [
+          "itens"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CriarLancamentoCommand"
+            }
+          }
+        }
+      },
+      "CriarLancamentosEmLoteResponse": {
+        "required": [
+          "quantidade",
+          "lancamentos"
+        ],
+        "type": "object",
+        "properties": {
+          "quantidade": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lancamentos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LancamentoDoLoteResponse"
+            }
+          }
+        }
+      },
+      "EncerrarSessaoCommand": {
+        "required": [
+          "tokenRenovacao"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenRenovacao": {
+            "type": "string"
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "LancamentoDetalheResponse": {
+        "required": [
+          "id",
+          "contaId",
+          "sequencia",
+          "tipo",
+          "valor",
+          "dataLancamento",
+          "dataRegistro",
+          "stage",
+          "stageAtualizadoEm",
+          "tentativasEnvio",
+          "tentativasProcessamento"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contaId": {
+            "type": "string"
+          },
+          "sequencia": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoLancamentoEnum"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double"
+          },
+          "dataLancamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "dataRegistro": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageLancamentoEnum"
+          },
+          "stageAtualizadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tentativasEnvio": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tentativasProcessamento": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "erro": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "LancamentoDoLoteResponse": {
+        "required": [
+          "id",
+          "contaId",
+          "sequencia",
+          "stage"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contaId": {
+            "type": "string"
+          },
+          "sequencia": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageLancamentoEnum"
+          }
+        }
+      },
+      "LancamentoPendenteResponse": {
+        "required": [
+          "id",
+          "sequencia",
+          "tipo",
+          "valor",
+          "dataLancamento",
+          "dataRegistro",
+          "stage"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequencia": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoLancamentoEnum"
+          },
+          "valor": {
+            "type": "number",
+            "format": "double"
+          },
+          "dataLancamento": {
+            "type": "string",
+            "format": "date"
+          },
+          "dataRegistro": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageLancamentoEnum"
+          }
+        }
+      },
+      "LoginCommand": {
+        "required": [
+          "email",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginGoogleCommand": {
+        "required": [
+          "credencial"
+        ],
+        "type": "object",
+        "properties": {
+          "credencial": {
+            "type": "string"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RedefinirSenhaCommand": {
+        "required": [
+          "token",
+          "novaSenha"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "novaSenha": {
+            "type": "string"
+          }
+        }
+      },
+      "RegistrarUsuarioCommand": {
+        "required": [
+          "nome",
+          "email",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "RenovarSessaoCommand": {
+        "required": [
+          "tokenRenovacao"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenRenovacao": {
+            "type": "string"
+          }
+        }
+      },
+      "SaldoResponse": {
+        "required": [
+          "contaId",
+          "saldoConsolidado",
+          "ultimaSequenciaConsolidada",
+          "atualizadoEm",
+          "creditosPendentes",
+          "debitosPendentes",
+          "saldoProjetado",
+          "consolidacaoEmAndamento",
+          "pendentes"
+        ],
+        "type": "object",
+        "properties": {
+          "contaId": {
+            "type": "string"
+          },
+          "saldoConsolidado": {
+            "type": "number",
+            "format": "double"
+          },
+          "ultimaSequenciaConsolidada": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "atualizadoEm": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "creditosPendentes": {
+            "type": "number",
+            "format": "double"
+          },
+          "debitosPendentes": {
+            "type": "number",
+            "format": "double"
+          },
+          "saldoProjetado": {
+            "type": "number",
+            "format": "double"
+          },
+          "consolidacaoEmAndamento": {
+            "type": "boolean"
+          },
+          "pendentes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LancamentoPendenteResponse"
+            }
+          }
+        }
+      },
+      "SessaoResponse": {
+        "required": [
+          "tokenAcesso",
+          "expiraEm",
+          "tokenRenovacao",
+          "usuario"
+        ],
+        "type": "object",
+        "properties": {
+          "tokenAcesso": {
+            "type": "string"
+          },
+          "expiraEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tokenRenovacao": {
+            "type": "string"
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/UsuarioResponse"
+          }
+        }
+      },
+      "SolicitarRedefinicaoSenhaCommand": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "StageLancamentoEnum": {
+        "enum": [
+          "Cadastrado",
+          "Lido",
+          "Enfileirado",
+          "EmProcessamento",
+          "Consolidado",
+          "Erro"
+        ]
+      },
+      "TipoLancamentoEnum": {
+        "enum": [
+          "Credito",
+          "Debito"
+        ]
+      },
+      "UsuarioResponse": {
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "contaId",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "contaId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Cole o tokenAcesso devolvido por POST /auth/login.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Autenticacao"
+    },
+    {
+      "name": "Saldo"
+    },
+    {
+      "name": "Lancamentos"
+    }
+  ]
+}
