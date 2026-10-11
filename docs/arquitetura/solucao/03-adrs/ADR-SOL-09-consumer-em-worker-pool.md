@@ -15,6 +15,17 @@ imagem `runtime:9.0`, com no mínimo uma instância. A disponibilidade do worker
 e o modelo de escala (instâncias fixas ou automáticas) precisam ser confirmados antes da
 implantação: o recurso é recente.
 
+```mermaid
+flowchart TB
+    hoje["Consumer: pull,<br/>sem porta HTTP"] --> opcao{"Como rodar no GCP?"}
+    opcao -->|"proposta"| wp["Worker pool<br/>sem mudar o código<br/>instância sempre ligada"]
+    opcao --> svc["Cloud Run Service<br/>/health, imagem aspnet,<br/>CPU sempre alocada"]
+    opcao --> push["Push subscription<br/>endpoint HTTP, escala a zero,<br/>autenticar o push"]
+
+    classDef escolhida fill:#1168bd,stroke:#0b4884,color:#ffffff
+    class wp escolhida
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Como | Trade-off |

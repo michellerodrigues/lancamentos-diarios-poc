@@ -5,6 +5,43 @@ armazenamentos, como o esquema evolui, como entram dados de fora e como se recon
 saldo. Retrato do commit `45bcd17`, em 07/10/2026. O modelo lógico e físico, tabela a
 tabela, está em [modelo de dados](../software/05-modelo-de-dados.md).
 
+## Visão geral
+
+A fonte da verdade, o que deriva dela, os controles que conferem os dois e o caminho do banco até a nuvem.
+
+```mermaid
+flowchart LR
+    subgraph migracao["Migração do banco"]
+        direction TB
+        sqlite[("SQLite<br/>fase anterior")] -->|"trocado"| local[("SQL Server<br/>no compose")]
+        local -->|"mesmo esquema"| nuvem[("Cloud SQL<br/>for SQL Server")]
+    end
+
+    fonte[("LancamentosDiarios<br/>fonte da verdade")]
+    msg[["Pub/Sub<br/>transitório"]]
+    derivado[("SaldoConsolidado<br/>derivado")]
+    futuro[("MovimentoDiario<br/>derivado, futuro")]
+
+    fonte -->|"evento"| msg
+    msg -->|"consolidação"| derivado
+    fonte -.->|"reconstrução"| derivado
+    msg -.->|"segunda subscription"| futuro
+    fonte -.->|"carga inicial"| futuro
+
+    subgraph controles["Reconciliação diária"]
+        direction TB
+        r1["R1 saldo e soma"]
+        r3["R3 consolidado até N"]
+        r5["R5 presos depois do broker"]
+        r6["R6 contas em Erro"]
+    end
+
+    r1 -.->|"confere"| derivado
+    r3 -.->|"confere"| derivado
+    r5 -.->|"confere"| fonte
+    r6 -.->|"confere"| fonte
+```
+
 ## 1. Visão macro
 
 ```mermaid

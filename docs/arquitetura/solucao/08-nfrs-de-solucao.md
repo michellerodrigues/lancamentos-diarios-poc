@@ -9,6 +9,42 @@ Nada foi medido no GCP. Os números locais vêm de
 estimativas dizem de onde saem. Os NFRs internos do aplicativo (latência por operação,
 timeouts, retentativas) estão em [NFRs do aplicativo](../software/06-nfrs-do-aplicativo.md).
 
+## Visão geral
+
+Do que cada fluxo depende, com o SLA publicado de cada serviço. Lançar e consultar dependem, em série, do Load Balancer, do BFF, da WebApi e do banco (SLA composto perto de 99,84%), e não passam pelo caminho assíncrono: é o que permite lançar com a consolidação fora do ar.
+
+```mermaid
+flowchart TB
+    lancar["Lançar<br/>99,9%"]
+    consultar["Consultar o saldo<br/>99,5%"]
+    consolidar["Consolidar<br/>99% em até 30 s"]
+
+    subgraph sincrono["Caminho síncrono"]
+        lb["Load Balancer · 99,99%"]
+        bff["BFF · 99,95%"]
+        api["WebApi · 99,95%"]
+    end
+
+    subgraph assincrono["Caminho assíncrono"]
+        ps[["Pub/Sub · 99,95%"]]
+        relay["Relay"]
+        cons["Consumer"]
+    end
+
+    db[("Cloud SQL com HA<br/>99,95%")]
+
+    lancar --> lb
+    consultar --> lb
+    lb --> bff
+    bff --> api
+    api --> db
+    consolidar --> ps
+    consolidar --> relay
+    ps --> cons
+    cons --> db
+    relay --> db
+```
+
 ## 1. Resumo
 
 | Categoria | Meta proposta | Hoje |

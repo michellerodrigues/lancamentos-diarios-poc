@@ -26,6 +26,29 @@ mesmos contratos.
   o namespace do código não muda.
 - Dentro da solução, os projetos se referenciam diretamente, não pelo pacote.
 
+```mermaid
+flowchart TB
+    bff["BFF"]
+    webapi["WebApi"]
+    workers["Events e Consumer"]
+    messages["Messages<br/>requests e responses"]
+    common["Common<br/>enums, helpers, roles, posse<br/>sem ASP.NET Core"]
+    nuget[("nuget.org<br/>POCMica.*")]
+    outro["Outro cliente<br/>futuro"]
+
+    bff --> messages
+    webapi --> messages
+    messages --> common
+    workers --> common
+    common -.->|"dotnet pack"| nuget
+    messages -.->|"dotnet pack"| nuget
+    outro -.->|"consome"| nuget
+
+    duplicado["Duplicados no BFF e na WebApi:<br/>filtro de posse e transformer do OpenAPI,<br/>porque dependem de ASP.NET Core"]
+    bff -.- duplicado
+    webapi -.- duplicado
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

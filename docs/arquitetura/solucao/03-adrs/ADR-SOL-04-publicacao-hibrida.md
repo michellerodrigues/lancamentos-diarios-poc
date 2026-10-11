@@ -32,6 +32,18 @@ As quatro opções avaliadas, do [README](../../../../README.md#o-scheduler-tem-
 - A WebApi e o relay usam o mesmo `RelayLancamentos.PublicarAsync`, e a reserva
   (`Cadastrado` → `Lido`) impede que os dois publiquem a mesma linha.
 
+```mermaid
+flowchart TB
+    relay["Relay<br/>Cloud Run Job a cada minuto"]
+    commit["Commit do lançamento<br/>Cadastrado"] --> pend{"Há anterior pendente<br/>na conta?"}
+    pend -->|"não"| reserva["Reserva e publica já<br/>espera até 2 s"]
+    reserva -->|"confirmou"| enf["Enfileirado<br/>em milissegundos"]
+    reserva -->|"falhou ou passou de 2 s"| relay
+    pend -->|"sim"| relay
+    lote["Lote"] --> relay
+    relay -->|"publica em ordem,<br/>um por conta por execução"| enf2["Enfileirado<br/>em até um minuto"]
+```
+
 ## Consequências
 
 **Ganhos**

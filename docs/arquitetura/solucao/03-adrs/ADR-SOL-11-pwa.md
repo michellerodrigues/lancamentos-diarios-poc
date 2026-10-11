@@ -17,6 +17,15 @@ iOS), revisão de loja a cada versão e distribuição própria.
   cache, para a versão nova ser percebida.
 - Sem rede, a tela mantém o último saldo recebido e avisa. Lançar exige conexão.
 
+```mermaid
+flowchart TB
+    build["Build de produção<br/>manifest e service worker"] --> nginx["nginx<br/>index.html e ngsw.json sem cache"]
+    nginx -->|"HTTPS"| nav["Navegador"]
+    nav -->|"Instalar app ou<br/>Adicionar à Tela de Início"| icone["Ícone na tela inicial"]
+    icone --> sw["O service worker<br/>serve o app do cache"]
+    sw -->|"versão nova baixada<br/>em segundo plano"| prox["Entra na próxima abertura"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

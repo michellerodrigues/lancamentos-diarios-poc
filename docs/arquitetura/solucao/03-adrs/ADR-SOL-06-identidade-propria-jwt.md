@@ -21,6 +21,23 @@ login com Google é conveniente para o comerciante.
 | Redefinição | Link de uso único, 30 min, por e-mail; resposta 202 exista o e-mail ou não; redefinir revoga as renovações |
 | Google | O front obtém o ID token pelo Google Identity Services; a WebApi confere assinatura e audiência. Primeiro acesso cadastra como Cliente; e-mail já cadastrado é vinculado se o Google o der como verificado |
 
+```mermaid
+stateDiagram-v2
+    state "Sem sessão" as SemSessao
+    state "Com sessão" as ComSessao
+    state "Acesso vencido" as Vencido
+    state "Todas as sessões revogadas" as Revogadas
+
+    [*] --> SemSessao
+    SemSessao --> ComSessao: login ou cadastro
+    ComSessao --> SemSessao: logout
+    ComSessao --> Vencido: 15 min
+    Vencido --> ComSessao: renovou e trocou o par
+    Vencido --> SemSessao: renovação recusada
+    Vencido --> Revogadas: renovação reutilizada
+    Revogadas --> SemSessao
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não, por ora |

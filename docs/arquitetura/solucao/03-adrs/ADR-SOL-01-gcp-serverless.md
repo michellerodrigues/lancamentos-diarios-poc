@@ -25,6 +25,35 @@ servidor para atualizar, sem cluster para administrar.
 
 Região `southamerica-east1` (São Paulo): usuários no Brasil e dados no país.
 
+```mermaid
+flowchart TB
+    usuario(["Usuário"])
+
+    subgraph regiao["GCP · southamerica-east1"]
+        lb["Load Balancer HTTPS"]
+        servicos["Cloud Run Services<br/>front, BFF e WebApi"]
+        sched["Cloud Scheduler"]
+        job["Cloud Run Job<br/>relay"]
+        ps[["Pub/Sub"]]
+        pool["Cloud Run worker pool<br/>Consumer"]
+        sql[("Cloud SQL<br/>for SQL Server")]
+        sm["Secret Manager"]
+        ar["Artifact Registry"]
+    end
+
+    usuario --> lb
+    lb --> servicos
+    sched --> job
+    servicos --> sql
+    servicos --> ps
+    job --> sql
+    job --> ps
+    ps --> pool
+    pool --> sql
+    sm -.->|"segredos"| servicos
+    ar -.->|"imagens"| servicos
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

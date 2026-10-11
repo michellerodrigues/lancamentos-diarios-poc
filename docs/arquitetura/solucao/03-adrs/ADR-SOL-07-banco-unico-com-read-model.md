@@ -19,6 +19,26 @@ as duas coisas deixa o saldo errado.
 - As tabelas de usuário são criadas só pela WebApi. O relay e o Consumer não sabem que login
   existe.
 
+```mermaid
+flowchart LR
+    subgraph banco["Banco Lancamentos"]
+        direction TB
+        lanc[("LancamentosDiarios")]
+        saldo[("SaldoConsolidado")]
+        auth[("Usuarios e TokensDeUsuario")]
+    end
+
+    webapi["WebApi<br/>lança e consulta"] --> banco
+    relay["Relay"] --> banco
+    consumer["Consumer"] -->|"estágio e saldo<br/>na mesma transação"| saldo
+
+    evolucao["Se a leitura ameaçar a escrita:<br/>pool próprio, depois réplica,<br/>depois serviço de consulta"]
+    evolucao -.- webapi
+
+    classDef proposta fill:#eceff1,stroke:#90a4ae,color:#263238,stroke-dasharray: 4 3
+    class evolucao proposta
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

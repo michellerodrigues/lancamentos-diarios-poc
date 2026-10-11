@@ -11,6 +11,60 @@ em [NFRs de solução](../solucao/08-nfrs-de-solucao.md). As medições citadas 
 de um notebook. Cada afirmação diz se foi **medida**, se vem do **código** ou se é
 **inferida**.
 
+## Visão geral
+
+Os doze requisitos por situação, e as poucas causas que explicam quase todos os que falham. Verde: atendido; amarelo: parcial; vermelho: não atendido.
+
+```mermaid
+flowchart LR
+    subgraph desempenho["Desempenho"]
+        n01["APP-01 Lançar rápido<br/>atendido na amostra"]
+        n02["APP-02 Consulta barata<br/>não atendido"]
+    end
+
+    subgraph concorrencia["Concorrência"]
+        n03["APP-03 Contas não se bloqueiam<br/>não atendido"]
+        n04["APP-04 Leitura não espera escrita<br/>não atendido"]
+        n05["APP-05 Sem efeito duplicado<br/>atendido"]
+    end
+
+    subgraph resiliencia["Resiliência"]
+        n06["APP-06 Lançar sem a consolidação<br/>atendido"]
+        n07["APP-07 Recuperar sozinho<br/>parcial"]
+        n08["APP-08 Timeouts coerentes<br/>não atendido"]
+        n09["APP-09 Repetir é seguro<br/>não atendido"]
+        n12["APP-12 Desligar sem perder<br/>parcial"]
+    end
+
+    subgraph operacao["Cache e configuração"]
+        n10["APP-10 Fora de cache intermediário<br/>parcial"]
+        n11["APP-11 Falhar cedo<br/>atendido"]
+    end
+
+    c1(["Parâmetro nvarchar"])
+    c2(["READ_COMMITTED_SNAPSHOT<br/>desligado"])
+    c3(["Erro terminal"])
+    c4(["BFF 10 s, SQL 30 s"])
+    c5(["Sem chave de idempotência"])
+
+    c1 --> n02
+    c1 --> n03
+    c2 --> n04
+    c3 --> n07
+    c4 --> n08
+    c4 --> n09
+    c5 --> n09
+
+    classDef ok fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    classDef parcial fill:#f9a825,stroke:#c17900,color:#000000
+    classDef nao fill:#c62828,stroke:#8e0000,color:#ffffff
+    classDef causa fill:#eceff1,stroke:#90a4ae,color:#263238
+    class n01,n05,n06,n11 ok
+    class n07,n10,n12 parcial
+    class n02,n03,n04,n08,n09 nao
+    class c1,c2,c3,c4,c5 causa
+```
+
 ## 1. Resumo
 
 | Id | Requisito do aplicativo | Meta | Hoje | Situação |

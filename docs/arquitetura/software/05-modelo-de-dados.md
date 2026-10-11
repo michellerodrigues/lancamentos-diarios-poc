@@ -5,6 +5,63 @@ no banco, e as estratégias de persistência e concorrência. Retrato do commit 
 07/10/2026. A visão entre sistemas, a propriedade dos dados e a migração estão em
 [dados macro e migração](../solucao/05-dados-macro-e-migracao.md).
 
+## Visão geral
+
+Do conceito à consulta: cada entidade vira tabela, e cada tabela tem os índices que servem às consultas do fluxo. Em vermelho, o defeito que hoje anula essas buscas.
+
+```mermaid
+flowchart TB
+    subgraph logico["Lógico"]
+        eLanc["Lançamento"]
+        eSaldo["Saldo consolidado"]
+        eUsu["Usuário e tokens"]
+        eConta["Conta<br/>só o ContaId"]
+    end
+
+    subgraph fisico["Físico"]
+        tLanc[("LancamentosDiarios")]
+        tSaldo[("SaldoConsolidado")]
+        tUsu[("Usuarios e<br/>TokensDeUsuario")]
+    end
+
+    subgraph indices["Índices"]
+        iConta["UX ContaId, Sequencia<br/>clusterizado"]
+        iStage["IX Stage,<br/>ContaId, Sequencia"]
+        iPk["PK Id<br/>não clusterizada"]
+        iSaldo["PK ContaId"]
+    end
+
+    subgraph consultas["Consultas"]
+        qSeq["MAX + 1<br/>da conta"]
+        qPend["Pendentes<br/>e soma"]
+        qRes["Reserva<br/>do relay"]
+        qTrans["Transição<br/>por Id"]
+        qSaldo["Saldo<br/>da conta"]
+    end
+
+    defeito["Parâmetro nvarchar contra coluna varchar(20):<br/>a busca vira varredura"]
+
+    eLanc --> tLanc
+    eSaldo --> tSaldo
+    eUsu --> tUsu
+    eConta -.-> tLanc
+    tLanc --> iConta
+    tLanc --> iStage
+    tLanc --> iPk
+    tSaldo --> iSaldo
+    iConta --> qSeq
+    iConta --> qPend
+    iStage --> qRes
+    iPk --> qTrans
+    iSaldo --> qSaldo
+    qSeq -.- defeito
+    qPend -.- defeito
+    qSaldo -.- defeito
+
+    classDef alerta fill:#c62828,stroke:#8e0000,color:#ffffff
+    class defeito alerta
+```
+
 ## 1. Modelo lógico
 
 ```mermaid

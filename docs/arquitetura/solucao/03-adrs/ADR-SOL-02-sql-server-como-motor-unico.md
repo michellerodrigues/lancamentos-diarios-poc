@@ -19,6 +19,20 @@ e escrever o mesmo SQL em dois dialetos dobraria o risco.
   connection string inteira vem do Secret Manager.
 - **Um dialeto, um caminho de código.**
 
+```mermaid
+flowchart LR
+    dialeto{{"Um dialeto: T-SQL<br/>UPDLOCK, READPAST, OUTPUT"}}
+    sqlite[("SQLite<br/>fase anterior")]
+    local[("SQL Server 2022<br/>container, edição Developer")]
+    nuvem[("Cloud SQL for SQL Server<br/>IP privado e TLS")]
+    pg[("PostgreSQL<br/>se a licença pesar")]
+
+    sqlite -.->|"abandonado"| dialeto
+    dialeto --> local
+    dialeto --> nuvem
+    pg -.->|"alternativa"| dialeto
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

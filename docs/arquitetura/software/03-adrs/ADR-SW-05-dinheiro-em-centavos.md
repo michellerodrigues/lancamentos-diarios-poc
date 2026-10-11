@@ -20,6 +20,15 @@ saldo. A POC começou em SQLite, que não tem tipo decimal exato.
   `MidpointRounding.AwayFromZero`) e `ParaReais`.
 - **Formatação no servidor**: `LancamentoHelper.Moeda` devolve `R$ 1.234,50` em pt-BR.
 
+```mermaid
+flowchart TB
+    tela["Tela<br/>35,90"] -->|"máscara de caixa"| api["API<br/>35.90 em reais"]
+    api -->|"ParaCentavos, arredonda<br/>para longe do zero"| banco[("Banco<br/>3590 centavos")]
+    banco --> evento["Evento<br/>valorCentavos 3590"]
+    evento -->|"débito entra negativo"| saldo[("Saldo<br/>soma exata em centavos")]
+    saldo -->|"ParaReais e Moeda"| texto["R$ 35,90<br/>pronto no BFF"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

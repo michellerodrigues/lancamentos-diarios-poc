@@ -6,20 +6,43 @@ interfaces entre camadas. Retrato do commit `45bcd17`, em 07/10/2026.
 Os contratos com sistemas de fora (Google, SMTP) e a topologia do Pub/Sub estão em
 [integração e contratos entre sistemas](../solucao/04-integracao-e-contratos.md).
 
+## Visão geral
+
+As formas por que o dado passa, e quem converte cada uma, na escrita e na leitura.
+
+```mermaid
+flowchart TB
+    subgraph leitura["Leitura: o saldo da tela"]
+        direction TB
+        l1["SaldoAtual<br/>repositório"] -->|"ObterSaldoHandler<br/>centavos para reais"| l2["SaldoResponse<br/>Messages"]
+        l2 -->|"SaldoTelaConversor<br/>textos pt-BR e polling"| l3["SaldoTela<br/>BFF"]
+        l3 -->|"GET /api/saldo"| l4["SaldoTela<br/>TypeScript"]
+    end
+
+    subgraph escrita["Escrita: um lançamento novo"]
+        direction TB
+        e1["NovoLancamento<br/>TypeScript"] -->|"POST /api/lancamentos"| e2["NovoLancamentoRequest<br/>BFF"]
+        e2 -->|"LancamentoService<br/>conta do token"| e3["CriarLancamentoCommand<br/>Messages"]
+        e3 -->|"Montar<br/>reais para centavos"| e4["LancamentoEntity<br/>Events"]
+        e4 -->|"RelayLancamentos"| e5["LancamentoRegistradoEvent<br/>Pub/Sub"]
+        e5 -->|"o Consumer usa só o id<br/>e relê a linha"| e6["LancamentoEntity<br/>lida do banco"]
+    end
+```
+
 ## 1. Mapa dos contratos
 
 ```mermaid
-flowchart LR
+flowchart TB
     front["Front Angular"]
     bff["BFF"]
     webapi["WebApi"]
+    relay["Relay"]
     db[("SQL Server")]
     ps[["Pub/Sub"]]
     consumer["Consumer"]
-    relay["Relay"]
 
     front -->|"contratos de tela<br/>NovoLancamentoRequest, SaldoTela,<br/>LancamentoCriadoTela + comandos de auth"| bff
-    bff -->|"pacote Messages<br/>CriarLancamentoCommand, SaldoResponse…"| webapi
+    bff -->|"pacote Messages<br/>CriarLancamentoCommand,<br/>SaldoResponse…"| webapi
     webapi -->|"ILancamentoRepository<br/>IUsuarioRepository"| db
     webapi -->|"LancamentoRegistradoEvent"| ps
     relay -->|"LancamentoRegistradoEvent"| ps

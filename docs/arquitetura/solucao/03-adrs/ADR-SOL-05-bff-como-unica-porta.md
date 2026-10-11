@@ -21,6 +21,15 @@ rótulos de estágio e a dica de quando consultar de novo. A WebApi devolve dado
 - O lote (`POST /lancamentos/lote`) e o Swagger da WebApi ficam acessíveis só de dentro da
   rede. Se o admin precisar do lote em produção, a rota ganha um par no BFF com `SomenteAdmin`.
 
+```mermaid
+flowchart TB
+    nav(["Navegador"]) -->|"HTTPS /api"| lb["Load Balancer"]
+    lb --> bff["BFF<br/>JWT, policy e posse"]
+    bff -->|"pela VPC, mesmo Bearer"| api["WebApi · ingress interno<br/>confere tudo de novo"]
+    nav --x|"sem rota pública"| api
+    adm(["Admin dentro da rede"]) -->|"lote e Swagger"| api
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

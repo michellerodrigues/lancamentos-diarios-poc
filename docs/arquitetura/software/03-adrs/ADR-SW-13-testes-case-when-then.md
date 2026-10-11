@@ -22,6 +22,17 @@ quebra e não diz qual comportamento se perdeu.
 - **Construtores de cenário** em `Dado`: `Dado.UmLancamento().NaConta("ABC1234").ComSequencia(2).Build()`.
 - Mocks estritos onde a ausência de uma chamada importa (`MockBehavior.Strict` no Consumer).
 
+```mermaid
+flowchart TB
+    externa["Classe externa: o objeto sob teste<br/>ConsolidadorDeMensagemTests"]
+    externa --> ctx1["Contexto<br/>QuandoAMensagemEDuplicada"]
+    externa --> ctx2["Contexto<br/>QuandoAConsolidacaoFalha"]
+    ctx1 --> caso["Case: monta o cenário"]
+    caso --> quando["When: executa a ação<br/>uma vez antes de cada Fact"]
+    quando --> then1["Fact<br/>Entao_confirma_sem_reprocessar"]
+    quando --> then2["Fact<br/>Entao_nao_toca_no_saldo"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

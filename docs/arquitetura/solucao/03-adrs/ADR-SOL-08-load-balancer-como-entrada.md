@@ -19,6 +19,15 @@ há hoje limite de requisições nem bloqueio de força bruta (RNF-24).
   teto geral em `/api/*`.
 - O front passa a chamar `/api` relativo; o `Cors:Origens` do BFF só serve no local.
 
+```mermaid
+flowchart LR
+    usuario(["Usuário"]) -->|"https://domínio"| lb["Load Balancer HTTPS<br/>IP global, certificado gerenciado"]
+    http(["http://"]) -.->|"redireciona para HTTPS"| lb
+    lb -->|"/api/*"| armor["Cloud Armor<br/>limite por IP em /api/auth"]
+    armor --> bff["BFF<br/>NEG serverless"]
+    lb -->|"o resto"| front["Front<br/>NEG serverless"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

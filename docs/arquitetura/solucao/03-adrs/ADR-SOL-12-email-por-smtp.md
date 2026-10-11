@@ -17,6 +17,18 @@ visível sem conta em provedor nenhum. Na nuvem, o provedor ainda não foi escol
 - O envio acontece dentro da requisição de "esqueci a senha"; falha de SMTP vai para o log e
   a resposta é 202 assim mesmo.
 
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant W as WebApi
+    participant M as Servidor SMTP
+    U->>W: esqueci a senha, pelo BFF
+    W->>M: e-mail com o link, dentro da requisição
+    W-->>U: 202, exista o e-mail ou não
+    M-->>U: link de uso único, válido por 30 min
+    Note over W,M: no local o Mailpit na 1025, na nuvem o provedor na 587 com STARTTLS
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não, por ora |

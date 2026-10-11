@@ -9,6 +9,40 @@ Todos foram registrados em 07/10/2026, a partir do código no commit `45bcd17`, 
 As decisões já tinham sido tomadas e implementadas; estes registros dizem o porquê, o que
 foi descartado e quando vale revisitar.
 
+## Visão geral
+
+As 14 decisões por tema. A central é a SW-03, o outbox na própria linha: dela decorrem a concorrência no banco (SW-04) e a recusa de data futura (SW-12). Azul: aceita; azul-claro: aceita, ainda não executada no GCP.
+
+```mermaid
+flowchart LR
+    raiz(["ADRs de software"])
+    raiz --> t1["Estilo e padrões"]
+    raiz --> t2["Persistência"]
+    raiz --> t3["Contratos e configuração"]
+    raiz --> t4["Processos"]
+    raiz --> t5["Front"]
+    raiz --> t6["Domínio e testes"]
+    t1 --> sw01["SW-01 · Minimal API, CQRS<br/>e dispatcher próprio"]
+    t1 --> sw03["SW-03 · Outbox na própria linha"]
+    t2 --> sw02["SW-02 · Dapper sem ORM"]
+    t2 --> sw04["SW-04 · Concorrência no banco"]
+    t2 --> sw05["SW-05 · Dinheiro em centavos"]
+    t2 --> sw06["SW-06 · Dados no .Events"]
+    t3 --> sw07["SW-07 · Contratos em pacotes"]
+    t3 --> sw08["SW-08 · Configuração<br/>validada na subida"]
+    t4 --> sw09["SW-09 · Relay independente<br/>do host"]
+    t4 --> sw10["SW-10 · Consumer com a regra<br/>separada do transporte"]
+    t5 --> sw11["SW-11 · Polling condicional"]
+    t5 --> sw14["SW-14 · Sessão no localStorage"]
+    t6 --> sw12["SW-12 · Data futura recusada"]
+    t6 --> sw13["SW-13 · Case, When, Then"]
+
+    classDef aceita fill:#1168bd,stroke:#0b4884,color:#ffffff
+    classDef naoExecutada fill:#85bbf0,stroke:#5d82a8,color:#000000
+    class sw01,sw02,sw03,sw04,sw05,sw06,sw07,sw08,sw10,sw11,sw12,sw13,sw14 aceita
+    class sw09 naoExecutada
+```
+
 ## Formato
 
 Cada ADR tem status, contexto, decisão, alternativas, consequências, onde está no código e

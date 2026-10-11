@@ -16,68 +16,114 @@ controle de layout. As cores seguem o C4:
 | Azul-claro | componente |
 | Cinza | sistema ou container fora do escopo do diagrama |
 
+## Visão geral
+
+Como os diagramas deste documento se encaixam: cada container abre num diagrama de componentes, que abre nas classes, que aparecem nas sequências.
+
+```mermaid
+flowchart LR
+    subgraph n2["Nível 2"]
+        cFront["Front"]
+        cBff["BFF"]
+        cApi["WebApi"]
+        cRelay["Relay"]
+        cCons["Consumer"]
+    end
+
+    subgraph n3["Nível 3"]
+        kFront["Componentes<br/>do front"]
+        kBff["Componentes<br/>do BFF"]
+        kApi["Componentes<br/>da WebApi"]
+        kRelay["Componentes<br/>do relay"]
+        kCons["Componentes<br/>do Consumer"]
+    end
+
+    subgraph n4["Nível 4"]
+        lCqrs["CQRS"]
+        lPers["Persistência"]
+        lPub["Publicação e<br/>consolidação"]
+        lAuth["Autenticação<br/>e posse"]
+        lBff["BFF"]
+    end
+
+    subgraph sequencias["Sequências"]
+        s12["1 e 2<br/>registrar"]
+        s34["3 e 4<br/>relay"]
+        s5["5<br/>consolidação"]
+        s6["6<br/>login"]
+        s7["7<br/>polling"]
+        s8["8<br/>senha"]
+    end
+
+    cFront --> kFront
+    cBff --> kBff
+    cApi --> kApi
+    cRelay --> kRelay
+    cCons --> kCons
+    kApi --> lCqrs
+    kApi --> lPers
+    kApi --> lAuth
+    kBff --> lBff
+    kRelay --> lPub
+    kCons --> lPub
+    lCqrs --> s12
+    lPers --> s12
+    lPub --> s34
+    lPub --> s5
+    lAuth --> s6
+    lAuth --> s8
+    kFront --> s7
+
+    classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff
+    classDef componente fill:#85bbf0,stroke:#5d82a8,color:#000000
+    class cFront,cBff,cApi,cRelay,cCons container
+    class kFront,kBff,kApi,kRelay,kCons componente
+```
+
 ## Nível 3 — Componentes
 
 ### WebApi
 
+**Recorte 1: lançamentos e saldo**
+
 ```mermaid
 flowchart TB
     bff(["BFF<br/>[Container]"])
-    adm(["Administrador<br/>Swagger ou script de demonstração"])
+    adm(["Administrador<br/>Swagger ou script<br/>de demonstração"])
 
     subgraph webapi["WebApi [Container: .NET 9, Minimal API]"]
-        direction TB
-        ep_auth["AuthEndpoints<br/>[Endpoint] /auth/*"]
         ep_lanc["LancamentosEndpoints<br/>[Endpoint] /lancamentos"]
         ep_saldo["SaldoEndpoints<br/>[Endpoint] /saldo, /contas"]
         posse["PosseDaContaFilter<br/>[Filtro de endpoint]"]
-        disp["Dispatcher<br/>[Mediator] valida e resolve o handler"]
+        disp["Dispatcher<br/>[Mediator] valida e<br/>resolve o handler"]
         h_lanc["Handlers de lançamento<br/>Criar, Criar em lote, Obter"]
         h_saldo["Handlers de saldo<br/>ObterSaldo, ListarContas"]
-        h_auth["Handlers de autenticação<br/>Login, Google, Registrar, Renovar,<br/>Sair, Esqueci e Redefinir senha"]
-        sessao["Sessão<br/>AberturaDeSessao, EmissorDeTokens,<br/>CadastroDeCliente, SegredoOpaco"]
-        urepo["UsuarioRepository<br/>[Dapper]"]
-        gval["ValidadorGoogle"]
-        smtp["SmtpEnviadorEmail"]
-        boot["DatabaseBootstrapper<br/>AuthBootstrapper"]
+        relay["RelayLancamentos<br/>.PublicarAsync<br/>[vem do .Events]"]
         lrepo["LancamentoRepository<br/>[Dapper, vem do .Events]"]
-        relay["RelayLancamentos.PublicarAsync<br/>[vem do .Events]"]
         pub["PubSubPublicador<br/>[vem do .Events]"]
+        boot["DatabaseBootstrapper<br/>[vem do .Events]<br/>banco e esquema"]
     end
 
     sql[("Banco Lancamentos<br/>[SQL Server]")]
     ps[["Pub/Sub<br/>lancamentos-registrados"]]
-    gid["Google Identity<br/>[Sistema externo]"]
-    mail["Servidor SMTP<br/>[Sistema externo]"]
 
-    bff -->|"HTTP/JSON + Bearer"| ep_auth
     bff -->|"HTTP/JSON + Bearer"| ep_lanc
     bff -->|"HTTP/JSON + Bearer"| ep_saldo
     adm -->|"POST /lancamentos/lote"| ep_lanc
-    posse -.->|"filtra"| ep_lanc
-    posse -.->|"filtra"| ep_saldo
-    ep_auth --> disp
+    ep_lanc -.->|"usa o filtro"| posse
+    ep_saldo -.->|"usa o filtro"| posse
     ep_lanc --> disp
     ep_saldo --> disp
     disp --> h_lanc
     disp --> h_saldo
-    disp --> h_auth
     h_lanc --> lrepo
     h_lanc --> relay
     relay --> lrepo
     relay --> pub
-    pub -->|"gRPC, orderingKey = conta"| ps
     h_saldo --> lrepo
-    h_auth --> sessao
-    h_auth --> urepo
-    sessao --> urepo
-    h_auth --> gval
-    h_auth --> smtp
-    gval -->|"chaves públicas do Google"| gid
-    smtp -->|"SMTP"| mail
+    pub -->|"gRPC,<br/>orderingKey = conta"| ps
     lrepo -->|"TDS 1433"| sql
-    urepo -->|"TDS 1433"| sql
-    boot -->|"DDL idempotente na subida"| sql
+    boot -->|"DDL idempotente<br/>na subida"| sql
 
     classDef pessoa fill:#08427b,stroke:#052e56,color:#ffffff
     classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff
@@ -85,8 +131,53 @@ flowchart TB
     classDef externo fill:#999999,stroke:#6b6b6b,color:#ffffff
     class adm pessoa
     class bff container
-    class ep_auth,ep_lanc,ep_saldo,posse,disp,h_lanc,h_saldo,h_auth,sessao,urepo,gval,smtp,boot,lrepo,relay,pub componente
-    class sql,ps,gid,mail externo
+    class ep_lanc,ep_saldo,posse,disp,h_lanc,h_saldo,relay,lrepo,pub,boot componente
+    class sql,ps externo
+```
+
+**Recorte 2: autenticação**
+
+```mermaid
+flowchart TB
+    bff(["BFF<br/>[Container]"])
+
+    subgraph webapi["WebApi [Container: .NET 9, Minimal API]"]
+        ep_auth["AuthEndpoints<br/>[Endpoint] /auth/*"]
+        disp["Dispatcher<br/>[Mediator] valida e<br/>resolve o handler"]
+        h_auth["Handlers de autenticação<br/>Login, Google, Registrar,<br/>Renovar, Sair,<br/>Esqueci e Redefinir senha"]
+        sessao["Sessão<br/>AberturaDeSessao,<br/>EmissorDeTokens,<br/>CadastroDeCliente,<br/>SegredoOpaco"]
+        urepo["UsuarioRepository<br/>[Dapper]"]
+        gval["ValidadorGoogle"]
+        smtp["SmtpEnviadorEmail"]
+        boot["AuthBootstrapper<br/>esquema de usuários e,<br/>no local, os de demonstração"]
+    end
+
+    sql[("Banco Lancamentos<br/>[SQL Server]")]
+    gid["Google Identity<br/>[Sistema externo]"]
+    mail["Servidor SMTP<br/>[Sistema externo]"]
+
+    bff -->|"HTTP/JSON + Bearer"| ep_auth
+    ep_auth --> disp
+    disp --> h_auth
+    h_auth --> sessao
+    h_auth --> urepo
+    sessao --> urepo
+    h_auth --> gval
+    h_auth --> smtp
+    gval -->|"chaves públicas<br/>do Google"| gid
+    smtp -->|"SMTP"| mail
+    urepo -->|"TDS 1433"| sql
+    boot -->|"na subida"| sql
+    urepo ~~~ gid
+    urepo ~~~ mail
+
+    classDef pessoa fill:#08427b,stroke:#052e56,color:#ffffff
+    classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff
+    classDef componente fill:#85bbf0,stroke:#5d82a8,color:#000000
+    classDef externo fill:#999999,stroke:#6b6b6b,color:#ffffff
+    class bff container
+    class ep_auth,disp,h_auth,sessao,urepo,gval,smtp,boot componente
+    class sql,gid,mail externo
 ```
 
 | Componente | Responsabilidade | Código |
@@ -230,17 +321,16 @@ flowchart TB
 flowchart TB
     user(["Cliente ou Administrador"])
 
-    subgraph spa["SPA [Container: Angular 20 standalone, PWA, servido por nginx]"]
-        direction TB
+    subgraph spa["SPA [Container: Angular 20 standalone, PWA, nginx]"]
         rotas["app.routes + guards<br/>exigeLogin, somenteConvidado"]
         t_saldo["SaldoConsolidadoComponent"]
         t_novo["NovoLancamentoComponent"]
-        t_auth["Entrar, Cadastro, EsqueciSenha,<br/>RedefinirSenha, BotaoGoogle"]
-        lserv["LancamentosService<br/>[signals, polling condicional]"]
-        aserv["AuthService<br/>[sessão, uma renovação por vez]"]
+        t_auth["Entrar, Cadastro,<br/>EsqueciSenha, RedefinirSenha,<br/>BotaoGoogle"]
+        lserv["LancamentosService<br/>[signals, polling<br/>condicional]"]
+        aserv["AuthService<br/>[sessão, uma renovação<br/>por vez]"]
         inter["autenticacaoInterceptor<br/>[Bearer; renova no 401]"]
-        gis["google-identity.ts<br/>[carrega o script sob demanda]"]
-        sw["Service worker<br/>[ngsw, só arquivos estáticos]"]
+        gis["google-identity.ts<br/>[carrega o script<br/>sob demanda]"]
+        sw["Service worker<br/>[ngsw, só arquivos<br/>estáticos]"]
     end
 
     bff(["BFF<br/>[Container]"])
@@ -260,6 +350,8 @@ flowchart TB
     inter -->|"HTTPS/JSON"| bff
     aserv --> store
     gis -->|"script e ID token"| google
+    inter ~~~ store
+    inter ~~~ google
 
     classDef pessoa fill:#08427b,stroke:#052e56,color:#ffffff
     classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff
@@ -281,32 +373,41 @@ Só as classes que carregam regra. DTOs e opções aparecem quando ajudam a ler 
 
 ### CQRS na WebApi
 
+**Despacho e handlers**
+
 ```mermaid
 classDiagram
-    direction LR
-    class ICommand~TResultado~ {
-        <<interface>>
-    }
-    class IQuery~TResultado~ {
-        <<interface>>
-    }
+    direction TB
     class IDispatcher {
         <<interface>>
-        +EnviarAsync(comando, ct) Task~TResultado~
-        +ConsultarAsync(consulta, ct) Task~TResultado~
+        +EnviarAsync(comando) Task~TResultado~
+        +ConsultarAsync(consulta) Task~TResultado~
     }
     class Dispatcher {
         -IServiceProvider provider
-        -DespacharAsync(mensagem, handlerAberto, ct) Task~TResultado~
-        -ValidarAsync(mensagem, ct) Task
+        -DespacharAsync(mensagem, handlerAberto) Task~TResultado~
+        -ValidarAsync(mensagem) Task
     }
     class ICommandHandler {
         <<interface>>
-        +HandleAsync(comando, ct) Task~TResultado~
+        +HandleAsync(comando) Task~TResultado~
     }
     class IQueryHandler {
         <<interface>>
-        +HandleAsync(consulta, ct) Task~TResultado~
+        +HandleAsync(consulta) Task~TResultado~
+    }
+    class CriarLancamentoValidator {
+        +decimal ValorMaximo$
+        +string PadraoConta$
+    }
+    class CriarLancamentoHandler {
+        +TimeSpan LimitePublicacao$
+        +HandleAsync(comando) Task~CriarLancamentoResponse~
+        +Montar(comando, registro)$ LancamentoEntity
+        -TentarPublicarAsync(lancamento) Task~StageLancamentoEnum~
+    }
+    class ObterSaldoHandler {
+        +HandleAsync(consulta) Task~SaldoResponse~
     }
     class CriarLancamentoCommand {
         <<record>>
@@ -316,23 +417,44 @@ classDiagram
         +DateOnly DataLancamento
         +string Observacao
     }
-    class CriarLancamentoValidator {
-        +decimal ValorMaximo$
-        +string PadraoConta$
-    }
-    class CriarLancamentoHandler {
-        +TimeSpan LimitePublicacao$
-        +HandleAsync(comando, ct) Task~CriarLancamentoResponse~
-        +Montar(comando, registro)$ LancamentoEntity
-        -TentarPublicarAsync(lancamento, ct) Task~StageLancamentoEnum~
-    }
     class ObterSaldoQuery {
         <<record>>
         +string ContaId
         +int LimitePendentes
     }
-    class ObterSaldoHandler {
-        +HandleAsync(consulta, ct) Task~SaldoResponse~
+    class ICommand~TResultado~ {
+        <<interface>>
+    }
+    class IQuery~TResultado~ {
+        <<interface>>
+    }
+
+    IDispatcher <|.. Dispatcher
+    CriarLancamentoValidator <.. Dispatcher : valida antes do handler
+    Dispatcher ..> ICommandHandler : resolve pelo tipo
+    Dispatcher ..> IQueryHandler : resolve pelo tipo
+    ICommandHandler <|.. CriarLancamentoHandler
+    IQueryHandler <|.. ObterSaldoHandler
+    CriarLancamentoHandler ..> CriarLancamentoCommand : trata
+    ObterSaldoHandler ..> ObterSaldoQuery : trata
+    CriarLancamentoCommand ..|> ICommand
+    ObterSaldoQuery ..|> IQuery
+```
+
+**Erros e tradução para HTTP**
+
+```mermaid
+classDiagram
+    direction TB
+    class Dispatcher
+    class IExceptionHandler {
+        <<interface>>
+        +TryHandleAsync(contexto, excecao) ValueTask~bool~
+    }
+    class ValidationExceptionHandler
+    class ProblemaExceptionHandler
+    class ValidationException {
+        <<FluentValidation>>
     }
     class ProblemaException {
         +int Status
@@ -340,23 +462,11 @@ classDiagram
         +Conflito(titulo)$ ProblemaException
         +Invalido(titulo)$ ProblemaException
     }
-    class ValidationExceptionHandler {
-        +TryHandleAsync(contexto, excecao, ct) ValueTask~bool~
-    }
-    class ProblemaExceptionHandler {
-        +TryHandleAsync(contexto, excecao, ct) ValueTask~bool~
-    }
 
-    IDispatcher <|.. Dispatcher
-    ICommand <|.. CriarLancamentoCommand
-    IQuery <|.. ObterSaldoQuery
-    ICommandHandler <|.. CriarLancamentoHandler
-    IQueryHandler <|.. ObterSaldoHandler
-    Dispatcher ..> CriarLancamentoValidator : valida antes do handler
-    Dispatcher ..> ICommandHandler : resolve pelo tipo
-    Dispatcher ..> IQueryHandler : resolve pelo tipo
-    CriarLancamentoHandler ..> CriarLancamentoCommand : trata
-    ObterSaldoHandler ..> ObterSaldoQuery : trata
+    IExceptionHandler <|.. ValidationExceptionHandler
+    IExceptionHandler <|.. ProblemaExceptionHandler
+    Dispatcher ..> ValidationException : lança se o validator falha
+    ValidationExceptionHandler ..> ValidationException : traduz para 400
     ProblemaExceptionHandler ..> ProblemaException : traduz para HTTP
 ```
 
@@ -368,24 +478,24 @@ mensagem que o BFF serializa. `ICommandHandler<TCommand, TResultado>` e
 
 ```mermaid
 classDiagram
-    direction LR
+    direction TB
     class ILancamentoRepository {
         <<interface>>
-        +InserirAsync(lancamento, ct) Task~long~
-        +InserirLoteAsync(lancamentos, ct) Task
-        +SemPredecessorPendenteAsync(contaId, sequencia, ct) Task~bool~
-        +ReservarUmAsync(id, ct) Task~bool~
-        +ReservarParaPublicacaoAsync(limite, reservaExpiraEm, ct) Task~IReadOnlyList~
-        +MarcarEnfileiradoAsync(id, mensagemId, ct) Task
-        +LiberarReservaAsync(id, ct) Task
-        +DevolverParaFilaAsync(id, motivo, maxTentativas, proximaTentativaEm, ct) Task
-        +IniciarProcessamentoAsync(id, ct) Task~LancamentoEntity~
-        +ConsolidarAsync(lancamento, ct) Task~bool~
-        +DevolverParaProcessamentoAsync(id, motivo, maxTentativas, ct) Task
-        +ListarPendentesAsync(contaId, limite, ct) Task~IReadOnlyList~
-        +ObterSaldoAsync(contaId, ct) Task~SaldoAtual~
-        +ListarContasAsync(ct) Task~IReadOnlyList~
-        +ObterPorIdAsync(id, ct) Task~LancamentoEntity~
+        +InserirAsync(lancamento) Task~long~
+        +InserirLoteAsync(lancamentos) Task
+        +SemPredecessorPendenteAsync(contaId, sequencia) Task~bool~
+        +ReservarUmAsync(id) Task~bool~
+        +ReservarParaPublicacaoAsync(limite, reservaExpiraEm) Task~IReadOnlyList~
+        +MarcarEnfileiradoAsync(id, mensagemId) Task
+        +LiberarReservaAsync(id) Task
+        +DevolverParaFilaAsync(id, motivo, maxTentativas, proximaTentativaEm) Task
+        +IniciarProcessamentoAsync(id) Task~LancamentoEntity~
+        +ConsolidarAsync(lancamento) Task~bool~
+        +DevolverParaProcessamentoAsync(id, motivo, maxTentativas) Task
+        +ListarPendentesAsync(contaId, limite) Task~IReadOnlyList~
+        +ObterSaldoAsync(contaId) Task~SaldoAtual~
+        +ListarContasAsync() Task~IReadOnlyList~
+        +ObterPorIdAsync(id) Task~LancamentoEntity~
     }
     class LancamentoRepository {
         -int TentativasSequencia$
@@ -394,8 +504,8 @@ classDiagram
     }
     class IDbConnectionFactory {
         <<interface>>
-        +AbrirAsync(ct) Task~SqlConnection~
-        +AbrirNoServidorAsync(ct) Task~SqlConnection~
+        +AbrirAsync() Task~SqlConnection~
+        +AbrirNoServidorAsync() Task~SqlConnection~
         +int TimeoutComandoSegundos
     }
     class SqlServerConnectionFactory
@@ -440,7 +550,7 @@ classDiagram
         Erro = 6
     }
     class DatabaseBootstrapper {
-        +GarantirEsquemaAsync(ct) Task
+        +GarantirEsquemaAsync() Task
     }
 
     ILancamentoRepository <|.. LancamentoRepository
@@ -461,15 +571,15 @@ pendente.
 
 ```mermaid
 classDiagram
-    direction LR
+    direction TB
     class RelayLancamentos {
-        +PublicarAsync(lancamento, ct) Task~bool~
-        +ExecutarCicloAsync(ct) Task~int~
+        +PublicarAsync(lancamento) Task~bool~
+        +ExecutarCicloAsync() Task~int~
         +CalcularBackoff(tentativa) TimeSpan
     }
     class IPublicadorEventos {
         <<interface>>
-        +PublicarAsync(evento, ct) Task~string~
+        +PublicarAsync(evento) Task~string~
     }
     class PubSubPublicador {
         -PublisherClient cliente
@@ -478,8 +588,8 @@ classDiagram
     }
     class RelayWorker {
         #ExecuteAsync(stoppingToken) Task
-        -ExecutarCicloUnicoAsync(ct) Task
-        -ExecutarEmLoopAsync(ct) Task
+        -ExecutarCicloUnicoAsync() Task
+        -ExecutarEmLoopAsync() Task
     }
     class BackgroundService {
         <<abstract>>
@@ -507,7 +617,7 @@ classDiagram
         #ExecuteAsync(stoppingToken) Task
     }
     class ConsolidadorDeMensagem {
-        +ProcessarAsync(corpo, mensagemId, ct) Task~RespostaAoBrokerEnum~
+        +ProcessarAsync(corpo, mensagemId) Task~RespostaAoBrokerEnum~
     }
     class RespostaAoBrokerEnum {
         <<enumeration>>
@@ -524,7 +634,7 @@ classDiagram
     RelayWorker --> RelayLancamentos : chama o ciclo
     RelayLancamentos --> IPublicadorEventos
     RelayLancamentos --> ILancamentoRepository
-    RelayLancamentos --> RelayOptions
+    RelayOptions <-- RelayLancamentos
     RelayLancamentos ..> LancamentoRegistradoEvent : monta
     ConsolidacaoWorker --> ConsolidadorDeMensagem
     ConsolidadorDeMensagem --> ILancamentoRepository
@@ -537,11 +647,46 @@ falha ali conta tentativa e aplica o backoff exatamente como no relay.
 
 ### Autenticação e posse
 
+**Handlers de autenticação**
+
 ```mermaid
 classDiagram
-    direction LR
+    direction TB
+    class LoginHandler
+    class LoginGoogleHandler
+    class RenovarSessaoHandler
+    class RedefinirSenhaHandler
+    class IValidadorGoogle {
+        <<interface>>
+        +ValidarAsync(credencial) Task~IdentidadeGoogle~
+    }
+    class CadastroDeCliente
+    class AberturaDeSessao
+    class IUsuarioRepository {
+        <<interface>>
+    }
+
+    LoginHandler --> IUsuarioRepository
+    LoginHandler --> AberturaDeSessao
+    LoginGoogleHandler --> IValidadorGoogle
+    LoginGoogleHandler --> CadastroDeCliente
+    LoginGoogleHandler --> AberturaDeSessao
+    RenovarSessaoHandler --> IUsuarioRepository
+    RenovarSessaoHandler --> AberturaDeSessao
+    RedefinirSenhaHandler --> IUsuarioRepository
+```
+
+**Sessão, tokens e cadastro**
+
+```mermaid
+classDiagram
+    direction TB
     class AberturaDeSessao {
-        +AbrirAsync(usuario, ct) Task~SessaoResponse~
+        +AbrirAsync(usuario) Task~SessaoResponse~
+    }
+    class CadastroDeCliente {
+        +CadastrarAsync(email, nome, senha, googleId) Task~UsuarioEntity~
+        +SortearConta()$ string
     }
     class EmissorDeTokens {
         +CriarAcesso(usuario) TokenDeAcesso
@@ -552,26 +697,26 @@ classDiagram
         +Gerar()$ SegredoOpaco
         +Hashear(texto)$ bytes
     }
-    class CadastroDeCliente {
-        +CadastrarAsync(email, nome, senha, googleId, ct) Task~UsuarioEntity~
-        +SortearConta()$ string
-    }
     class IUsuarioRepository {
         <<interface>>
-        +ObterPorEmailAsync(email, ct) Task~UsuarioEntity~
-        +InserirAsync(usuario, ct) Task~ResultadoInsercaoUsuarioEnum~
-        +GravarTokenAsync(usuarioId, finalidade, hash, expiraEm, ct) Task
-        +ConsumirTokenAsync(hash, finalidade, ct) Task~ConsumoDeToken~
-        +RevogarTokensAsync(usuarioId, finalidade, ct) Task
+        +ObterPorEmailAsync(email) Task~UsuarioEntity~
+        +InserirAsync(usuario) Task~ResultadoInsercaoUsuarioEnum~
+        +GravarTokenAsync(usuarioId, finalidade, hash, expiraEm) Task
+        +ConsumirTokenAsync(hash, finalidade) Task~ConsumoDeToken~
+        +RevogarTokensAsync(usuarioId, finalidade) Task
     }
-    class LoginHandler
-    class LoginGoogleHandler
-    class RenovarSessaoHandler
-    class RedefinirSenhaHandler
-    class IValidadorGoogle {
-        <<interface>>
-        +ValidarAsync(credencial, ct) Task~IdentidadeGoogle~
-    }
+
+    AberturaDeSessao --> EmissorDeTokens
+    AberturaDeSessao ..> SegredoOpaco : gera a renovação
+    AberturaDeSessao --> IUsuarioRepository
+    CadastroDeCliente --> IUsuarioRepository
+```
+
+**Posse da conta**
+
+```mermaid
+classDiagram
+    direction TB
     class PosseDaContaFilter {
         +InvokeAsync(contexto, proximo) ValueTask~object~
     }
@@ -585,18 +730,6 @@ classDiagram
         +PodeAcessarConta(usuario, contaId)$ bool
     }
 
-    LoginHandler --> IUsuarioRepository
-    LoginHandler --> AberturaDeSessao
-    LoginGoogleHandler --> IValidadorGoogle
-    LoginGoogleHandler --> CadastroDeCliente
-    LoginGoogleHandler --> AberturaDeSessao
-    RenovarSessaoHandler --> IUsuarioRepository
-    RenovarSessaoHandler --> AberturaDeSessao
-    RedefinirSenhaHandler --> IUsuarioRepository
-    AberturaDeSessao --> EmissorDeTokens
-    AberturaDeSessao --> IUsuarioRepository
-    AberturaDeSessao ..> SegredoOpaco : gera a renovação
-    CadastroDeCliente --> IUsuarioRepository
     PosseDaContaFilter ..> IReferenciaConta : lê a conta do corpo e da resposta
     PosseDaContaFilter ..> UsuarioAutenticadoExtensions : aplica a regra
 ```
@@ -608,27 +741,27 @@ vê o hash.
 
 ```mermaid
 classDiagram
-    direction LR
+    direction TB
     class ISaldoService {
         <<interface>>
-        +ObterAsync(contaId, ct) Task~RespostaApi~
-        +ListarContasAsync(ct) Task~RespostaApi~
+        +ObterAsync(contaId) Task~RespostaApi~
+        +ListarContasAsync() Task~RespostaApi~
     }
     class ILancamentoService {
         <<interface>>
-        +IncluirAsync(pedido, usuario, ct) Task~RespostaApi~
+        +IncluirAsync(pedido, usuario) Task~RespostaApi~
     }
     class IAutenticacaoService {
         <<interface>>
-        +EntrarAsync(comando, ct) Task~RespostaRepassada~
-        +RenovarAsync(comando, ct) Task~RespostaRepassada~
+        +EntrarAsync(comando) Task~RespostaRepassada~
+        +RenovarAsync(comando) Task~RespostaRepassada~
     }
     class ILancamentosApiClient {
         <<interface>>
-        +ObterSaldoAsync(contaId, ct) Task~RespostaApi~
-        +ListarContasAsync(ct) Task~RespostaApi~
-        +CriarLancamentoAsync(comando, ct) Task~RespostaApi~
-        +RepassarAsync(metodo, caminho, corpo, ct) Task~RespostaRepassada~
+        +ObterSaldoAsync(contaId) Task~RespostaApi~
+        +ListarContasAsync() Task~RespostaApi~
+        +CriarLancamentoAsync(comando) Task~RespostaApi~
+        +RepassarAsync(metodo, caminho, corpo) Task~RespostaRepassada~
     }
     class IConversor {
         <<interface>>
@@ -643,7 +776,7 @@ classDiagram
         +Mapear(converter) RespostaApi
     }
     class RepassarTokenHandler {
-        #SendAsync(request, ct) Task~HttpResponseMessage~
+        #SendAsync(request) Task~HttpResponseMessage~
     }
     class SaldoService
     class LancamentoService
@@ -677,32 +810,31 @@ diagrama porque o Mermaid não os desenha.
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Cliente
     participant F as Front
     participant B as BFF
     participant W as WebApi
     participant DB as SQL Server
     participant PS as Pub/Sub
-    U->>F: confirma tipo, valor, data e observação
-    F->>B: POST /api/lancamentos com Bearer
-    B->>B: valida o JWT, a policy ClienteOuAdmin e a posse
-    B->>B: sem conta no corpo, usa o claim conta
-    B->>W: POST /lancamentos com o mesmo Bearer
-    W->>W: valida o JWT, a policy e a posse de novo
+    Note over F: o Cliente confirma tipo,<br/>valor, data e observação
+    F->>B: POST /api/lancamentos<br/>com Bearer
+    B->>B: valida o JWT, a policy<br/>ClienteOuAdmin e a posse
+    B->>B: sem conta no corpo,<br/>usa o claim conta
+    B->>W: POST /lancamentos<br/>com o mesmo Bearer
+    W->>W: valida o JWT, a policy<br/>e a posse de novo
     W->>W: CriarLancamentoValidator
-    W->>DB: BEGIN, MAX(Sequencia)+1 da conta com UPDLOCK e HOLDLOCK
-    W->>DB: INSERT com Stage = Cadastrado, COMMIT
-    W->>DB: existe anterior da conta em Cadastrado, Lido ou Erro?
+    W->>DB: BEGIN, MAX(Sequencia)+1<br/>da conta, com UPDLOCK<br/>e HOLDLOCK
+    W->>DB: INSERT com Stage =<br/>Cadastrado, COMMIT
+    W->>DB: existe anterior da conta<br/>em Cadastrado, Lido<br/>ou Erro?
     DB-->>W: não
-    W->>DB: UPDATE Stage = Lido WHERE Id = id AND Stage = Cadastrado
+    W->>DB: UPDATE Stage = Lido<br/>WHERE Id = id AND<br/>Stage = Cadastrado
     DB-->>W: 1 linha
-    W->>PS: Publish com orderingKey = conta
+    W->>PS: Publish com<br/>orderingKey = conta
     PS-->>W: messageId
-    W->>DB: UPDATE Stage = Enfileirado WHERE Stage = Lido
-    W-->>B: 201 CriarLancamentoResponse com stage Enfileirado
+    W->>DB: UPDATE Stage =<br/>Enfileirado WHERE<br/>Stage = Lido
+    W-->>B: 201 CriarLancamentoResponse<br/>com stage Enfileirado
     B->>B: LancamentoCriadoTelaConversor
     B-->>F: 201 LancamentoCriadoTela
-    F->>F: mostra a confirmação e recarrega o saldo
+    F->>F: mostra a confirmação<br/>e recarrega o saldo
 ```
 
 A sequência é atribuída dentro da transação do `INSERT`. Se dois `INSERT` da mesma conta
@@ -717,25 +849,25 @@ sequenceDiagram
     participant DB as SQL Server
     participant PS as Pub/Sub
     participant R as Relay
-    Note over W,DB: lançamento já gravado como Cadastrado
+    Note over W,DB: lançamento já gravado<br/>como Cadastrado
     alt há anterior pendente na conta
-        W-->>W: responde 201 com stage Cadastrado
-        Note over R: o relay publica a conta em ordem no próximo ciclo
+        W-->>W: responde 201<br/>com stage Cadastrado
+        Note over R: o relay publica a conta<br/>em ordem no próximo ciclo
     else o relay reservou a linha antes
-        W->>DB: UPDATE Stage = Lido WHERE Stage = Cadastrado
+        W->>DB: UPDATE Stage = Lido<br/>WHERE Stage = Cadastrado
         DB-->>W: 0 linhas
-        W-->>W: responde 201 com stage Lido
+        W-->>W: responde 201<br/>com stage Lido
     else o broker passou do teto de 2 s
         W->>PS: Publish
-        W-->>W: para de esperar e responde 201 com stage Lido
-        PS-->>W: confirma depois, e a linha vai para Enfileirado
-        Note over W,R: travando de vez, a reserva vence em 1 min e o relay recolhe
+        W-->>W: para de esperar e responde<br/>201 com stage Lido
+        PS-->>W: confirma depois, e a linha<br/>vai para Enfileirado
+        Note over W,R: travando de vez, a reserva vence em 1 min<br/>e o relay recolhe
     else o broker falhou
         W->>PS: Publish
         PS--xW: erro
         W->>PS: ResumePublish da conta
-        W->>DB: volta para Cadastrado, TentativasEnvio+1 e ProximaTentativaEm
-        W-->>W: responde 201 com stage Cadastrado
+        W->>DB: volta para Cadastrado,<br/>TentativasEnvio+1<br/>e ProximaTentativaEm
+        W-->>W: responde 201<br/>com stage Cadastrado
     end
 ```
 
@@ -752,22 +884,22 @@ sequenceDiagram
     participant DB as SQL Server
     participant PS as Pub/Sub
     T->>R: ExecutarCicloAsync
-    R->>DB: WITH candidatos TOP 50 com UPDLOCK, READPAST, ROWLOCK, UPDATE para Lido, OUTPUT
-    Note over R,DB: candidato é Cadastrado ou Lido com reserva vencida, fora do backoff e sem anterior bloqueante
-    DB-->>R: linhas já em Lido, por conta e sequência
+    R->>DB: WITH candidatos TOP 50<br/>com UPDLOCK, READPAST,<br/>ROWLOCK, UPDATE para Lido,<br/>OUTPUT
+    Note over R,DB: candidato é Cadastrado ou Lido<br/>com reserva vencida, fora do backoff<br/>e sem anterior bloqueante
+    DB-->>R: linhas já em Lido,<br/>por conta e sequência
     loop cada lançamento reservado
         alt a conta já falhou neste ciclo
-            R->>DB: Lido para Cadastrado, sem gastar tentativa
+            R->>DB: Lido para Cadastrado,<br/>sem gastar tentativa
         else
-            R->>PS: Publish com orderingKey = conta
+            R->>PS: Publish com<br/>orderingKey = conta
             alt publicou
                 PS-->>R: messageId
                 R->>DB: Lido para Enfileirado
             else falhou
                 PS--xR: erro
                 R->>PS: ResumePublish da conta
-                R->>DB: Lido para Cadastrado com espera de 2, 4, 8 ou 16 s, ou Erro na 5ª falha
-                R->>R: marca a conta como travada no ciclo
+                R->>DB: Lido para Cadastrado<br/>com espera de 2, 4, 8<br/>ou 16 s, ou Erro<br/>na 5ª falha
+                R->>R: marca a conta como<br/>travada no ciclo
             end
         end
     end
@@ -785,16 +917,16 @@ sequenceDiagram
     participant RJ as Cloud Run Job
     participant RW as RelayWorker
     participant R as RelayLancamentos
-    CS->>RJ: POST jobs/lancamentos-relay:run com OAuth da service account
-    RJ->>RW: sobe o container com LoopContinuo = false
-    RW->>RW: garante o esquema e, se configurado, tópico e subscription
+    CS->>RJ: POST<br/>jobs/lancamentos-relay:run<br/>com OAuth da service account
+    RJ->>RW: sobe o container com<br/>LoopContinuo = false
+    RW->>RW: garante o esquema e,<br/>se configurado, tópico<br/>e subscription
     RW->>R: ExecutarCicloAsync
     alt o ciclo terminou
         R-->>RW: quantidade publicada
-        RW->>RJ: StopApplication, código de saída 0
+        RW->>RJ: StopApplication,<br/>código de saída 0
     else exceção
-        RW->>RJ: StopApplication, código de saída 1
-        Note over RJ: o Job reexecuta até 3 vezes dentro do timeout de 50 s
+        RW->>RJ: StopApplication,<br/>código de saída 1
+        Note over RJ: o Job reexecuta até 3 vezes<br/>dentro do timeout de 50 s
     end
 ```
 
@@ -810,26 +942,26 @@ sequenceDiagram
     participant CW as ConsolidacaoWorker
     participant C as ConsolidadorDeMensagem
     participant DB as SQL Server
-    PS->>CW: mensagem, uma por vez em cada conta
-    CW->>C: ProcessarAsync com corpo e messageId
+    PS->>CW: mensagem, uma por vez<br/>em cada conta
+    CW->>C: ProcessarAsync com<br/>corpo e messageId
     alt corpo inválido ou vazio
-        C-->>CW: Confirmar, a reentrega não conserta
+        C-->>CW: Confirmar, a reentrega<br/>não conserta
     else corpo válido
-        C->>DB: UPDATE para EmProcessamento, TentativasProcessamento+1, OUTPUT, WHERE Stage IN Lido ou Enfileirado
+        C->>DB: UPDATE para EmProcessamento,<br/>TentativasProcessamento+1,<br/>OUTPUT, WHERE Stage IN<br/>Lido ou Enfileirado
         alt nenhuma linha
-            C-->>CW: Confirmar, mensagem repetida ou lançamento já finalizado
+            C-->>CW: Confirmar, mensagem<br/>repetida ou lançamento<br/>já finalizado
         else linha devolvida
-            C->>DB: BEGIN, UPDATE para Consolidado WHERE Stage = EmProcessamento
-            C->>DB: UPDATE SaldoConsolidado com UPDLOCK e SERIALIZABLE, ou INSERT, COMMIT
+            C->>DB: BEGIN, UPDATE para<br/>Consolidado WHERE<br/>Stage = EmProcessamento
+            C->>DB: UPDATE SaldoConsolidado<br/>com UPDLOCK e SERIALIZABLE,<br/>ou INSERT, COMMIT
             alt consolidou
                 C-->>CW: Confirmar
             else exceção
-                C->>DB: volta para Enfileirado, ou Erro na 5ª tentativa
+                C->>DB: volta para Enfileirado,<br/>ou Erro na 5ª tentativa
                 C-->>CW: Devolver
             end
         end
     end
-    CW-->>PS: Ack para Confirmar, Nack para Devolver
+    CW-->>PS: Ack para Confirmar,<br/>Nack para Devolver
 ```
 
 O valor somado vem da linha no banco, não do corpo da mensagem: o corpo só aponta o
@@ -847,27 +979,27 @@ sequenceDiagram
     participant W as WebApi
     participant DB as SQL Server
     F->>B: POST /api/auth/login
-    B->>W: POST /auth/login, repasse sem transformação
-    W->>DB: usuário pelo e-mail normalizado
-    W->>W: PBKDF2, contra um hash fictício se o e-mail não existe
-    W->>DB: INSERT do SHA-256 do token de renovação, vence em 7 dias
-    W-->>F: 200 com JWT de 15 min e token de renovação, via BFF
-    F->>F: guarda a sessão no localStorage
+    B->>W: POST /auth/login, repasse<br/>sem transformação
+    W->>DB: usuário pelo e-mail<br/>normalizado
+    W->>W: PBKDF2, contra um hash<br/>fictício se o e-mail<br/>não existe
+    W->>DB: INSERT do SHA-256 do<br/>token de renovação,<br/>vence em 7 dias
+    W-->>F: 200 com JWT de 15 min e<br/>token de renovação, via BFF
+    F->>F: guarda a sessão<br/>no localStorage
     Note over F,W: 15 minutos depois
-    F->>B: GET /api/saldo/ABC1234 com JWT vencido
+    F->>B: GET /api/saldo/ABC1234<br/>com JWT vencido
     B-->>F: 401
-    F->>B: POST /api/auth/renovar, uma renovação por vez
+    F->>B: POST /api/auth/renovar,<br/>uma renovação por vez
     B->>W: POST /auth/renovar
-    W->>DB: UPDATE ConsumidoEm OUTPUT UsuarioId WHERE hash não consumido e não vencido
+    W->>DB: UPDATE ConsumidoEm<br/>OUTPUT UsuarioId<br/>WHERE hash não consumido<br/>e não vencido
     alt token válido
-        W->>DB: relê o usuário, com a role atual
-        W->>DB: INSERT do novo token de renovação
-        W-->>F: 200 com o par novo, via BFF
-        F->>B: repete o GET com o JWT novo
+        W->>DB: relê o usuário,<br/>com a role atual
+        W->>DB: INSERT do novo<br/>token de renovação
+        W-->>F: 200 com o par novo,<br/>via BFF
+        F->>B: repete o GET<br/>com o JWT novo
     else token já consumido
-        W->>DB: revoga todos os tokens de renovação do usuário
+        W->>DB: revoga todos os tokens<br/>de renovação do usuário
         W-->>F: 401, via BFF
-        F->>F: descarta a sessão e vai para /entrar
+        F->>F: descarta a sessão<br/>e vai para /entrar
     end
 ```
 
@@ -879,16 +1011,16 @@ sequenceDiagram
     participant L as LancamentosService
     participant B as BFF
     participant W as WebApi
-    T->>L: acompanhar ao abrir a tela
+    T->>L: acompanhar ao<br/>abrir a tela
     loop enquanto intervaloPollingMs for maior que zero
         L->>B: GET /api/saldo/ABC1234
         B->>W: GET /saldo/ABC1234
-        W-->>B: SaldoResponse com consolidado e pendentes
-        B-->>L: SaldoTela com intervaloPollingMs 2000 se há pendente, 0 se não
-        L->>L: atualiza os signals e agenda o próximo setTimeout
+        W-->>B: SaldoResponse com<br/>consolidado e pendentes
+        B-->>L: SaldoTela com<br/>intervaloPollingMs 2000<br/>se há pendente, 0 se não
+        L->>L: atualiza os signals<br/>e agenda o próximo<br/>setTimeout
     end
-    Note over L: sem pendente, nenhuma requisição até o usuário lançar ou recarregar
-    T->>L: pararAcompanhamento ao sair da tela
+    Note over L: sem pendente, nenhuma<br/>requisição até o usuário<br/>lançar ou recarregar
+    T->>L: pararAcompanhamento<br/>ao sair da tela
 ```
 
 Se a consulta falha, o service mantém o último saldo e liga o aviso "Sem conexão". Uma tela
@@ -911,17 +1043,17 @@ sequenceDiagram
         W-->>F: 202, via BFF
     else com cadastro
         W->>DB: revoga links anteriores
-        W->>DB: INSERT do hash do link, vence em 30 min
-        W->>M: e-mail com o link /redefinir-senha e o token
-        W-->>F: 202, via BFF, mesmo se o SMTP falhar
+        W->>DB: INSERT do hash do link,<br/>vence em 30 min
+        W->>M: e-mail com o link<br/>/redefinir-senha e o token
+        W-->>F: 202, via BFF, mesmo<br/>se o SMTP falhar
     end
-    Note over F: o usuário abre o link do e-mail
-    F->>B: POST /api/auth/redefinir-senha com token e nova senha
+    Note over F: o usuário abre<br/>o link do e-mail
+    F->>B: POST /api/auth/redefinir-senha<br/>com token e nova senha
     B->>W: POST /auth/redefinir-senha
-    W->>W: valida a senha nova antes de gastar o token
-    W->>DB: consome o token com UPDATE e OUTPUT
-    W->>DB: grava o hash PBKDF2 da senha nova
-    W->>DB: revoga todos os tokens de renovação do usuário
+    W->>W: valida a senha nova<br/>antes de gastar o token
+    W->>DB: consome o token<br/>com UPDATE e OUTPUT
+    W->>DB: grava o hash PBKDF2<br/>da senha nova
+    W->>DB: revoga todos os tokens<br/>de renovação do usuário
     W-->>F: 204, via BFF
 ```
 

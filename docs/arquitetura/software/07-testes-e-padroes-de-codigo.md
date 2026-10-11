@@ -4,6 +4,53 @@ Como provar que o aplicativo faz o que promete em cada camada, como manter a arq
 pé enquanto o código cresce, e as regras de código que o repositório já segue. Retrato do
 commit `45bcd17`, em 07/10/2026.
 
+## Visão geral
+
+Cada camada de teste prova o que a anterior não alcança. Verde: existe; amarelo: feito à mão; tracejado: proposto. A lacuna que mais pesa é a integração de dados: ordem e idempotência moram no SQL, que hoje só aparece como mock.
+
+```mermaid
+flowchart LR
+    subgraph camadas["Camadas de teste"]
+        direction TB
+        t1["Unidade<br/>298 testes"]
+        t2["Arquitetura<br/>NetArchTest"]
+        t3["Integração de dados<br/>SQL Server em container"]
+        t4["Integração HTTP<br/>WebApplicationFactory"]
+        t5["Mensageria<br/>emulador do Pub/Sub"]
+        t6["Contrato<br/>oasdiff, AsyncAPI, snapshot"]
+        t7["Ponta a ponta<br/>Playwright"]
+        t8["Resiliência e carga<br/>scripts"]
+    end
+
+    subgraph provas["O que cada uma prova"]
+        direction TB
+        r1["A regra de cada classe"]
+        r2["Dependências permitidas<br/>entre projetos"]
+        r3["Ordem, idempotência e<br/>sequência no SQL"]
+        r4["Policies e posse<br/>no pipeline HTTP"]
+        r5["Ordering key, ack e reentrega"]
+        r6["API e evento sem quebra"]
+        r7["Do clique ao saldo"]
+        r8["Lançar sem a consolidação;<br/>50 consultas por segundo"]
+    end
+
+    t1 --> r1
+    t2 --> r2
+    t3 --> r3
+    t4 --> r4
+    t5 --> r5
+    t6 --> r6
+    t7 --> r7
+    t8 --> r8
+
+    classDef existe fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    classDef manual fill:#f9a825,stroke:#c17900,color:#000000
+    classDef proposto fill:#eceff1,stroke:#90a4ae,color:#263238,stroke-dasharray: 4 3
+    class t1 existe
+    class t8 manual
+    class t2,t3,t4,t5,t6,t7 proposto
+```
+
 ## 1. Situação atual
 
 Detalhada em [cobertura-de-testes.md](../../cobertura-de-testes.md):

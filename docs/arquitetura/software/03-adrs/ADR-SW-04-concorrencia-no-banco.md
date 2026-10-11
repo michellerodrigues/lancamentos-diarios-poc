@@ -25,6 +25,21 @@ várias contas em paralelo. Tudo isso sem serviço de trava externo.
 O nível de isolamento é o padrão do SQL Server, `READ COMMITTED` com travas; as dicas de
 consulta fazem o resto.
 
+```mermaid
+sequenceDiagram
+    participant A as Requisição A
+    participant B as Requisição B
+    participant DB as SQL Server
+    A->>DB: BEGIN, MAX(Sequencia)+1 da conta com UPDLOCK e HOLDLOCK
+    DB-->>A: 7, e a faixa da conta fica travada
+    B->>DB: BEGIN, MAX(Sequencia)+1 da mesma conta
+    Note over B,DB: espera a trava de A
+    A->>DB: INSERT da sequência 7, COMMIT
+    DB-->>B: 8
+    B->>DB: INSERT da sequência 8, COMMIT
+    Note over A,DB: se duas ainda pegarem o mesmo número, o índice único recusa uma, que recalcula e tenta de novo
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

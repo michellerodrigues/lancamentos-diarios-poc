@@ -6,6 +6,51 @@ relay. O que está marcado como proposta ainda não existe no repositório. Onde
 roda, com rede e IAM, está em
 [topologia de implantação](../solucao/07-implantacao-e-infraestrutura.md).
 
+## Visão geral
+
+De cada projeto ao artefato e ao destino, na ordem em que sobem numa release.
+
+```mermaid
+flowchart LR
+    subgraph projetos["Projetos"]
+        pWeb["WebApi"]
+        pBff["BFF"]
+        pEv["Events"]
+        pCons["Consumer"]
+        pFront["FrontEnd"]
+        pLibs["Common e<br/>Messages"]
+    end
+
+    subgraph artefatos["Artefatos"]
+        aAsp["Imagem<br/>aspnet:9.0"]
+        aRun["Imagem<br/>runtime:9.0"]
+        aNginx["Imagem<br/>nginx"]
+        aPkg["Pacotes<br/>POCMica.*"]
+    end
+
+    subgraph destinos["Destino, na ordem do deploy"]
+        d1["1 · Migração<br/>do banco"]
+        d2["2 · Consumer<br/>worker pool"]
+        d3["3 · WebApi e relay<br/>Service e Job"]
+        d4["4 · BFF<br/>Service"]
+        d5["5 · Front<br/>Service"]
+        dNuget["nuget.org"]
+    end
+
+    pWeb --> aAsp
+    pBff --> aAsp
+    pEv --> aRun
+    pCons --> aRun
+    pFront --> aNginx
+    pLibs --> aPkg
+    aRun --> d2
+    aAsp --> d3
+    aRun --> d3
+    aAsp --> d4
+    aNginx --> d5
+    aPkg --> dNuget
+```
+
 ## 1. Artefatos
 
 | Artefato | Origem | Formato | Base | Destino | Versão hoje |
@@ -66,22 +111,29 @@ Desktop.
 ## 3. Pipeline proposto
 
 ```mermaid
-flowchart LR
-    pr(["Pull request"]) --> ci
-    push(["Merge na main"]) --> ci
-    tag(["Tag vX.Y.Z"]) --> ci
+flowchart TB
+    pr(["Pull request"])
+    push(["Merge na main"])
+    tag(["Tag vX.Y.Z"])
 
     subgraph ci["Integração contínua"]
-        direction TB
         net["build e testes .NET<br/>formatação, arquitetura,<br/>cobertura"]
         front["build do front<br/>budgets"]
         contrato["contratos<br/>oasdiff, AsyncAPI"]
     end
 
-    ci -->|"main ou tag"| img["5 imagens<br/>tag sha-commit<br/>varredura de vulnerabilidades"]
-    img -->|"main"| dev["deploy em dev<br/>automático + smoke test"]
-    img -->|"tag"| hml["deploy em homologação<br/>automático + ponta a ponta"]
-    hml -->|"aprovação"| prd["deploy em produção<br/>canário 10% e depois 100%"]
+    img["5 imagens<br/>tag sha-commit<br/>varredura de vulnerabilidades"]
+    dev["deploy em dev<br/>automático + smoke test"]
+    hml["deploy em homologação<br/>automático + ponta a ponta"]
+    prd["deploy em produção<br/>canário 10% e depois 100%"]
+
+    pr --> ci
+    push --> ci
+    tag --> ci
+    ci -->|"main ou tag"| img
+    img -->|"main"| dev
+    img -->|"tag"| hml
+    hml -->|"aprovação"| prd
 ```
 
 | Portão | Falha o pipeline quando |

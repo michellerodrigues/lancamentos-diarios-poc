@@ -32,6 +32,17 @@ apontando para `localhost`, ou com um limite que ninguém escolheu.
 | `JwtOptions` (BFF) | `Auth:Jwt` | chave, emissor e audiência iguais aos da WebApi |
 | `WebApiOptions` (BFF) | `WebApi` | URL absoluta e timeout maior que zero |
 
+```mermaid
+flowchart TB
+    base["appsettings.json<br/>da imagem"] --> dev["appsettings.Development.json<br/>só no dotnet run"]
+    dev --> env["Variáveis de ambiente<br/>compose ou Cloud Run"]
+    sm["Secret Manager"] -->|"--set-secrets"| env
+    env --> opt["Classes Options<br/>sem valor padrão"]
+    opt --> val{"Valida?"}
+    val -->|"sim"| sobe["A aplicação sobe"]
+    val -->|"não"| para["Não sobe,<br/>com a mensagem certa"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

@@ -23,6 +23,17 @@ processo que faz o trabalho e termina, com código de saída diferente de zero q
   subscription.
 - A imagem traz `Relay__LoopContinuo=false`; o compose sobrescreve para `true`.
 
+```mermaid
+flowchart TB
+    worker["RelayWorker sobe<br/>garante esquema e recursos"] --> modo{"Relay:LoopContinuo"}
+    modo -->|"true, no local"| timer["PeriodicTimer<br/>a cada 2 s"]
+    timer --> cicloA["ExecutarCicloAsync"]
+    cicloA -->|"próximo tick"| timer
+    modo -->|"false, no Cloud Run Job"| cicloB["ExecutarCicloAsync<br/>uma vez"]
+    cicloB -->|"terminou"| fim0["StopApplication<br/>código 0"]
+    cicloB -->|"exceção"| fim1["StopApplication<br/>código 1: o Job tenta de novo"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

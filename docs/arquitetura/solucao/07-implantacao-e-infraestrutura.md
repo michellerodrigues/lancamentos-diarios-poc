@@ -8,6 +8,24 @@ GCP, só o relay tem script de deploy ([`deploy/events-cloud-run-job.sh`](../../
 e ele não foi executado. Todo o resto deste documento, inclusive o Terraform, é referência:
 não foi aplicado nem validado com `terraform plan`.
 
+## Visão geral
+
+Os quatro ambientes e como uma versão anda entre eles. Entre os ambientes na nuvem muda só a configuração; a imagem é a mesma.
+
+```mermaid
+flowchart TB
+    local["Local · docker compose<br/>demonstração, Swagger, Mailpit"]
+    img[["Imagem por commit<br/>tag sha-commit"]]
+    dev["Dev · projeto GCP próprio<br/>banco zonal, sem instância mínima"]
+    hml["Homologação<br/>como produção, menor,<br/>sem usuários de demonstração"]
+    prd["Produção<br/>HA regional e PITR,<br/>instância mínima no BFF e na WebApi"]
+
+    local -.->|"mesmos Dockerfiles"| img
+    img -->|"merge na main"| dev
+    dev -->|"tag vX.Y.Z"| hml
+    hml -->|"aprovação e canário de 10%"| prd
+```
+
 ## 1. Ambientes
 
 | | Local | Dev | Homologação | Produção |
@@ -27,7 +45,7 @@ Um projeto GCP por ambiente isola IAM, cotas e custos, e um erro em dev não alc
 ## 2. Topologia local
 
 ```mermaid
-flowchart LR
+flowchart TB
     nav(["Navegador"])
 
     subgraph host["Máquina de desenvolvimento, docker compose"]
@@ -36,8 +54,8 @@ flowchart LR
         webapi["webapi<br/>:8080 → host :5101"]
         events["events<br/>LoopContinuo = true"]
         consumer["consumer"]
-        sql[("sqlserver<br/>:1433, volume sqlserver-dados")]
-        pubsub[["pubsub<br/>emulador :8085, em memória"]]
+        sql[("sqlserver<br/>:1433, volume<br/>sqlserver-dados")]
+        pubsub[["pubsub<br/>emulador :8085,<br/>em memória"]]
         mailpit["mailpit<br/>SMTP :1025, web :8025"]
     end
 
@@ -71,28 +89,25 @@ flowchart TB
     subgraph projeto["Projeto GCP, região southamerica-east1"]
         subgraph borda["Borda global"]
             armor["Cloud Armor"]
-            lb["Load Balancer HTTPS externo<br/>IP global, certificado gerenciado"]
+            lb["Load Balancer HTTPS externo<br/>IP global, certificado<br/>gerenciado"]
         end
 
-        subgraph run["Cloud Run"]
-            front["lancamentos-frontend<br/>Service, ingress só pelo LB"]
-            bff["lancamentos-bff<br/>Service, ingress só pelo LB<br/>egress pela VPC: all-traffic"]
-            webapi["lancamentos-webapi<br/>Service, ingress interno<br/>egress pela VPC: private-ranges-only"]
-            job["lancamentos-relay<br/>Job, 1 tarefa, 50 s"]
-            consumer["lancamentos-consumer<br/>worker pool"]
-        end
-
+        front["lancamentos-frontend<br/>Cloud Run Service,<br/>ingress só pelo LB"]
+        bff["lancamentos-bff<br/>Cloud Run Service,<br/>ingress só pelo LB,<br/>egress pela VPC: all-traffic"]
+        webapi["lancamentos-webapi<br/>Cloud Run Service,<br/>ingress interno, egress pela<br/>VPC: private-ranges-only"]
+        job["lancamentos-relay<br/>Cloud Run Job,<br/>1 tarefa, 50 s"]
+        consumer["lancamentos-consumer<br/>Cloud Run worker pool"]
         sched["Cloud Scheduler<br/>a cada minuto"]
 
         subgraph vpc["VPC lancamentos-vpc"]
             subnet["Sub-rede lancamentos-run<br/>Direct VPC egress<br/>Private Google Access"]
-            sql[("Cloud SQL for SQL Server<br/>IP privado, HA regional")]
+            sql[("Cloud SQL<br/>for SQL Server<br/>IP privado, HA regional")]
         end
 
         ps[["Pub/Sub<br/>tópico, subscription, DLQ"]]
         sm["Secret Manager"]
-        ar["Artifact Registry"]
-        obs["Logging, Monitoring, Trace"]
+        ar["Artifact Registry<br/>imagens dos 5 containers"]
+        obs["Logging, Monitoring,<br/>Trace"]
     end
 
     google["Google Identity"]
@@ -102,7 +117,7 @@ flowchart TB
     armor --> lb
     lb -->|"/"| front
     lb -->|"/api"| bff
-    bff -->|"pela VPC, conta como interno"| webapi
+    bff -->|"pela VPC,<br/>conta como interno"| webapi
     webapi --> subnet
     job --> subnet
     consumer --> subnet
@@ -112,9 +127,11 @@ flowchart TB
     ps -->|"pull"| consumer
     sched -->|"OAuth"| job
     sm -.->|"segredos na subida"| webapi
-    ar -.->|"imagens"| run
     webapi --> google
     webapi --> smtp
+    sql ~~~ google
+    sql ~~~ smtp
+    sched ~~~ sm
 ```
 
 ## 4. Rede e zonas

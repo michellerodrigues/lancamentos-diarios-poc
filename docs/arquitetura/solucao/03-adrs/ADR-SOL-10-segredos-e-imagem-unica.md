@@ -21,6 +21,14 @@ comando.
   imagem traz os padrões de produção.
 - O `appsettings.json` base não deve ter segredo nem valor que pareça segredo.
 
+```mermaid
+flowchart TB
+    valor["Valor do segredo<br/>adicionado por fora"] --> sm["Secret Manager<br/>uma versão por troca"]
+    sm -->|"secretAccessor<br/>da service account"| run["Cloud Run<br/>lê na subida da instância"]
+    imagem[["Imagem sem segredo<br/>igual em todo ambiente"]] --> run
+    run -->|"Banco__ConnectionString<br/>Auth__Jwt__Chave"| app["Aplicação<br/>Options validadas"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

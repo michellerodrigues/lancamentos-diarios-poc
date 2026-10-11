@@ -27,6 +27,25 @@ fazem o caminho de ida e volta sozinhos.
   `AuthBootstrapper`. Mudança não aditiva vira um bloco condicional no script, como a troca
   da coluna `Papel` por `Role` com `sp_rename`.
 
+```mermaid
+flowchart LR
+    subgraph subida["Na subida do processo"]
+        boot["DatabaseBootstrapper<br/>AuthBootstrapper"] -->|"IF OBJECT_ID … IS NULL"| esquema[("Esquema")]
+    end
+
+    subgraph operacao["Em cada operação"]
+        repo["Repositório"] --> cmd["CommandDefinition<br/>SQL, parâmetros,<br/>timeout e token"]
+        cmd --> dapper["Dapper"]
+        dapper --> sqlc["SqlClient"]
+        sqlc --> banco[("SQL Server")]
+    end
+
+    aviso["string vai como nvarchar(4000):<br/>tipar a conta como varchar"] -.-> cmd
+
+    classDef alerta fill:#c62828,stroke:#8e0000,color:#ffffff
+    class aviso alerta
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

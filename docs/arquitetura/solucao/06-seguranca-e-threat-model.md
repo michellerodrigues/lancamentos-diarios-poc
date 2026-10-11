@@ -7,6 +7,39 @@ A POC não guarda dado real, e os usuários de demonstração e as senhas locais
 por desenho. Este documento separa o que é aceitável nesse contexto do que precisa mudar
 antes do primeiro dado real ([plano de ação](#10-plano-de-ação)).
 
+## Visão geral
+
+As camadas que uma requisição atravessa e o controle de cada uma. Verde: existe; amarelo: em parte; tracejado: proposto.
+
+```mermaid
+flowchart TB
+    req(["Requisição da internet"])
+    lb["Load Balancer<br/>TLS com certificado<br/>gerenciado"]
+    armor["Cloud Armor<br/>limite por IP<br/>em /api/auth"]
+    nginx["Front no nginx<br/>CSP e cabeçalhos"]
+    bff["BFF<br/>JWT, policy e<br/>posse da conta"]
+    api["WebApi<br/>JWT, policy e<br/>posse de novo"]
+    regras["Handlers<br/>validação, senha forte,<br/>token de uso único"]
+    sql["Acesso ao banco<br/>SQL parametrizado: existe<br/>usuário sem DDL: proposto"]
+    banco[("Cloud SQL<br/>sem IP público,<br/>cifrado")]
+
+    req --> lb
+    lb -->|"/"| nginx
+    lb -->|"/api"| armor
+    armor --> bff
+    bff -->|"mesmo Bearer"| api
+    api --> regras
+    regras --> sql
+    sql --> banco
+
+    classDef existe fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    classDef parcial fill:#f9a825,stroke:#c17900,color:#000000
+    classDef proposto fill:#eceff1,stroke:#90a4ae,color:#263238,stroke-dasharray: 4 3
+    class bff,api,regras existe
+    class sql parcial
+    class lb,armor,nginx,banco proposto
+```
+
 ## 1. Princípios
 
 | Princípio | Como aparece |
@@ -204,7 +237,7 @@ comunicados.
 ### 8.1 Fluxo de dados e fronteiras de confiança
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph z0["Internet"]
         nav["Navegador<br/>SPA + localStorage"]
     end
@@ -242,7 +275,7 @@ flowchart LR
     webapi -->|"F8 gRPC"| ps
     relay -->|"F9"| ps
     ps -->|"F10"| consumer
-    sm -.->|"F11 segredos na subida"| webapi
+    sm -.->|"F11 segredos<br/>na subida"| webapi
     nav -.->|"F12 login Google"| g
     webapi -->|"F13 chaves públicas"| g
     webapi -->|"F14 SMTP"| smtp

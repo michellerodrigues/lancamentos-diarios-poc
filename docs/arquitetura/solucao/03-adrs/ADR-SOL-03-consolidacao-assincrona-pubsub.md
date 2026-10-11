@@ -25,6 +25,27 @@ devem andar em paralelo.
 - **Provisionamento:** pela aplicação no local, onde o emulador sobe vazio
   (`PubSub:CriarRecursos=true`); por Terraform no GCP (`false`).
 
+```mermaid
+flowchart TB
+    pub["WebApi e relay"]
+
+    subgraph topico["Tópico lancamentos-registrados"]
+        kA["chave ABC1234<br/>nº 1, 2, 3"]
+        kB["chave XYZ9999<br/>nº 1, 2"]
+    end
+
+    sub["Subscription<br/>com ordenação"]
+    c1["Consumer<br/>ABC1234: uma por vez,<br/>em ordem"]
+    c2["Consumer<br/>XYZ9999: em paralelo<br/>com a outra conta"]
+
+    pub --> kA
+    pub --> kB
+    kA --> sub
+    kB --> sub
+    sub --> c1
+    sub --> c2
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

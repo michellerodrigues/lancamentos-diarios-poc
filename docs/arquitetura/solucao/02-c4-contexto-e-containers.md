@@ -9,6 +9,27 @@ integrações entre eles e com os sistemas de fora. Retrato do commit `45bcd17`,
 nativo do Mermaid ainda é experimental. Azul-escuro para pessoas, azul para o sistema e seus
 containers, cinza para sistemas externos. Linha tracejada é integração opcional ou futura.
 
+## Visão geral
+
+Os quatro níveis do C4 e onde cada um está. Os dois primeiros ficam neste documento; os outros dois, no de software.
+
+```mermaid
+flowchart TB
+    l1["Nível 1 · Contexto<br/>o sistema, três perfis de pessoa,<br/>Google, e-mail e clientes futuros"]
+    l2["Nível 2 · Containers<br/>SPA, BFF, WebApi, relay, Consumer,<br/>mensageria, banco e agendador"]
+    l3["Nível 3 · Componentes<br/>um diagrama por container"]
+    l4["Nível 4 · Código<br/>cinco diagramas de classe<br/>e oito sequências"]
+
+    l1 -->|"abre o sistema"| l2
+    l2 -->|"abre cada container"| l3
+    l3 -->|"abre as classes que carregam regra"| l4
+
+    classDef aqui fill:#1168bd,stroke:#0b4884,color:#ffffff
+    classDef outro fill:#85bbf0,stroke:#5d82a8,color:#000000
+    class l1,l2 aqui
+    class l3,l4 outro
+```
+
 ## Nível 1 — Contexto
 
 ```mermaid
@@ -57,15 +78,14 @@ flowchart TB
     admin(["Administrador"])
 
     subgraph sistema["Lançamentos Diários [Sistema de software]"]
-        direction TB
-        spa["SPA<br/>[Container: Angular 20, PWA, nginx]<br/>telas de saldo, lançamento e acesso"]
-        bff["BFF<br/>[Container: .NET 9, Minimal API]<br/>API das telas, posse da conta,<br/>formatação pt-BR"]
-        webapi["WebApi<br/>[Container: .NET 9, Minimal API]<br/>regras, emissão do JWT,<br/>publicação imediata"]
-        sched["Agendador<br/>[Container: Cloud Scheduler]<br/>dispara o relay a cada minuto"]
-        relay["Relay<br/>[Container: .NET 9 worker, Cloud Run Job]<br/>publica o que ficou para trás"]
-        ps[["Mensageria<br/>[Container: Pub/Sub]<br/>tópico lancamentos-registrados<br/>subscription lancamentos-consolidacao"]]
+        spa["SPA<br/>[Container: Angular 20,<br/>PWA, nginx]<br/>telas de saldo,<br/>lançamento e acesso"]
+        bff["BFF<br/>[Container: .NET 9,<br/>Minimal API]<br/>API das telas, posse da conta,<br/>formatação pt-BR"]
+        webapi["WebApi<br/>[Container: .NET 9,<br/>Minimal API]<br/>regras, emissão do JWT,<br/>publicação imediata"]
+        sched["Agendador<br/>[Container: Cloud Scheduler]<br/>dispara o relay<br/>a cada minuto"]
+        relay["Relay<br/>[Container: .NET 9 worker,<br/>Cloud Run Job]<br/>publica o que ficou<br/>para trás"]
+        ps[["Mensageria<br/>[Container: Pub/Sub]<br/>tópico<br/>lancamentos-registrados<br/>subscription<br/>lancamentos-consolidacao"]]
         consumer["Consumer<br/>[Container: .NET 9 worker]<br/>consolida o saldo"]
-        db[("Banco Lancamentos<br/>[Container: SQL Server 2022, Cloud SQL]<br/>lançamentos, saldo, usuários, tokens")]
+        db[("Banco Lancamentos<br/>[Container: SQL Server 2022,<br/>Cloud SQL]<br/>lançamentos, saldo,<br/>usuários, tokens")]
     end
 
     google["Google Identity Services<br/>[Sistema externo]"]
@@ -73,18 +93,20 @@ flowchart TB
 
     cliente -->|"HTTPS"| spa
     spa -->|"JSON/HTTPS + Bearer<br/>/api"| bff
-    admin -->|"POST /lancamentos/lote<br/>JSON + Bearer, só pela rede interna"| webapi
-    bff -->|"JSON/HTTPS + o mesmo Bearer"| webapi
+    admin -->|"POST /lancamentos/lote<br/>JSON + Bearer,<br/>só pela rede interna"| webapi
+    bff -->|"JSON/HTTPS +<br/>o mesmo Bearer"| webapi
     webapi -->|"TDS 1433, TLS"| db
-    webapi -->|"gRPC, orderingKey = conta"| ps
-    sched -->|"HTTPS, OAuth da SA"| relay
+    webapi -->|"gRPC,<br/>orderingKey = conta"| ps
+    sched -->|"HTTPS,<br/>OAuth da SA"| relay
     relay -->|"TDS 1433"| db
     relay -->|"gRPC"| ps
     ps -->|"streaming pull"| consumer
     consumer -->|"TDS 1433"| db
     spa -.->|"script e ID token"| google
-    webapi -->|"chaves públicas, HTTPS"| google
+    webapi -->|"chaves públicas,<br/>HTTPS"| google
     webapi -->|"SMTP"| smtp
+    db ~~~ google
+    db ~~~ smtp
 
     classDef pessoa fill:#08427b,stroke:#052e56,color:#ffffff
     classDef container fill:#438dd5,stroke:#2e6295,color:#ffffff

@@ -26,6 +26,19 @@ O MediatR, a escolha usual para despachar comandos em .NET, mudou de licenciamen
 - **Erros como `ProblemDetails`**, por dois `IExceptionHandler`: validação vira 400 com os
   erros por campo; `ProblemaException` leva o status escolhido pelo handler (401, 409, 400).
 
+```mermaid
+flowchart TB
+    ep["Endpoint<br/>só binding"] --> disp["Dispatcher"]
+    disp --> val{"Há validator<br/>para a mensagem?"}
+    val -->|"não"| hand["Handler resolvido<br/>pelo tipo da mensagem"]
+    val -->|"sim"| fv["FluentValidation"]
+    fv -->|"válida"| hand
+    fv -->|"inválida"| e400["400 com os erros<br/>por campo"]
+    hand -->|"sucesso"| ok["200 ou 201"]
+    hand -->|"ProblemaException"| eProb["401, 409 ou 400<br/>escolhido pelo handler"]
+    hand -->|"outra exceção"| e500["500 com<br/>ProblemDetails"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

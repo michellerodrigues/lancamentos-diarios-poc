@@ -13,6 +13,30 @@ contrato estão em [`contratos/`](../contratos):
 | [`openapi-webapi.v1.json`](../contratos/openapi-webapi.v1.json) | API interna da WebApi | Exportado da stack local, `/openapi/v1.json` |
 | [`asyncapi-lancamentos.v1.yaml`](../contratos/asyncapi-lancamentos.v1.yaml) | Evento de lançamento no Pub/Sub | Escrito a partir do contrato C# e do publicador |
 
+## Visão geral
+
+A garantia de cada trecho, do commit ao saldo. Tracejado: o que recupera falhas, existente ou proposto.
+
+```mermaid
+flowchart TB
+    commit[("Linha gravada<br/>Cadastrado")]
+    reserva["Reserva<br/>Cadastrado para Lido"]
+    broker[["Pub/Sub"]]
+    consumo["Consumer<br/>para EmProcessamento"]
+    saldo[("Consolidado e saldo<br/>na mesma transação")]
+    relay["Relay a cada minuto"]
+    dlq[["Dead-letter<br/>proposta"]]
+    rec["Reconciliação diária<br/>proposta"]
+
+    commit -->|"nada se perde:<br/>a linha é o outbox"| reserva
+    reserva -->|"só um publica;<br/>o sucessor espera"| broker
+    broker -->|"pelo menos uma vez;<br/>uma por vez por conta"| consumo
+    consumo -->|"repetição descartada<br/>pelo estágio"| saldo
+    relay -.->|"recolhe o que ficou"| reserva
+    broker -.->|"5 entregas sem ack"| dlq
+    rec -.->|"confere"| saldo
+```
+
 ## 1. Catálogo de integrações
 
 | Id | De → Para | Estilo | Protocolo | Autenticação | Contrato | Criticidade |
@@ -33,7 +57,7 @@ contrato estão em [`contratos/`](../contratos):
 ## 2. Padrões de integração
 
 ```mermaid
-flowchart LR
+flowchart TB
     spa["SPA"] -->|"síncrono"| bff["BFF"]
     bff -->|"síncrono, token relay"| webapi["WebApi"]
     webapi -->|"commit"| db[("Banco<br/>outbox na linha")]
@@ -89,14 +113,23 @@ cliente desse tipo precisaria de um usuário. Ver [integrações futuras](#8-int
 ### 4.1 Topologia
 
 ```mermaid
-flowchart LR
-    webapi["WebApi<br/>publicação imediata"] -->|"orderingKey = conta"| topico[["Tópico<br/>lancamentos-registrados"]]
-    relay["Relay<br/>varredura"] -->|"orderingKey = conta"| topico
-    topico --> sub["Subscription<br/>lancamentos-consolidacao<br/>pull, ordenada, ack em 60 s"]
-    sub -->|"streaming pull"| consumer["Consumer"]
-    sub -.->|"5 entregas sem ack<br/>proposta"| dlq[["Tópico<br/>lancamentos-registrados-dlq"]]
-    dlq -.-> insp["Subscription<br/>lancamentos-dlq-inspecao"]
-    topico -.->|"futuro"| sub2["Subscription<br/>saldo-diario"]
+flowchart TB
+    webapi["WebApi<br/>publicação imediata"]
+    relay["Relay<br/>varredura"]
+    topico[["Tópico<br/>lancamentos-registrados"]]
+    sub["Subscription<br/>lancamentos-consolidacao<br/>pull, ordenada, ack em 60 s"]
+    consumer["Consumer"]
+    dlq[["Tópico<br/>lancamentos-registrados-dlq"]]
+    insp["Subscription<br/>lancamentos-dlq-inspecao"]
+    sub2["Subscription<br/>saldo-diario"]
+
+    webapi -->|"orderingKey = conta"| topico
+    relay -->|"orderingKey = conta"| topico
+    topico --> sub
+    sub -->|"streaming pull"| consumer
+    sub -.->|"5 entregas sem ack<br/>proposta"| dlq
+    dlq -.-> insp
+    topico -.->|"futuro"| sub2
 ```
 
 ### 4.2 Garantias

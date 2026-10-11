@@ -40,6 +40,14 @@ Regras:
 
 O diagrama de estados completo está em [05 · Modelo de dados](../05-modelo-de-dados.md#2-máquina-de-estados-do-lançamento).
 
+```mermaid
+flowchart LR
+    ins["INSERT do lançamento<br/>já em Cadastrado"] --> upd["UPDATE … SET Stage = próximo<br/>WHERE Id = @Id<br/>AND Stage = esperado"]
+    upd -->|"1 linha"| feita["Transição feita:<br/>este processo segue"]
+    upd -->|"0 linhas"| outro["Outro processo chegou antes,<br/>ou é repetição:<br/>nada muda"]
+    bloq["Anterior da conta em<br/>Cadastrado, Lido ou Erro"] -.->|"segura a publicação"| upd
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

@@ -21,6 +21,25 @@ relay no GCP. Na maior parte do tempo não há nada em trânsito.
   pipes de moeda.
 - **Falha mantém o último saldo** na tela e liga o aviso de sem conexão.
 
+```mermaid
+stateDiagram-v2
+    state "Consultando o BFF" as Consultando
+    state "Esperando 2 s" as Esperando
+    state "Sem consultar" as Parado
+    state "Sem conexão" as SemConexao
+
+    [*] --> Consultando: tela aberta
+    Consultando --> Esperando: intervaloPollingMs = 2000
+    Esperando --> Consultando: 2 s depois
+    Consultando --> Parado: intervaloPollingMs = 0
+    Consultando --> SemConexao: falhou
+    SemConexao --> Esperando: o último saldo tinha pendente
+    SemConexao --> Parado: não havia saldo com pendente
+    Parado --> Consultando: o usuário lança ou recarrega
+    Esperando --> [*]: sai da tela
+    Parado --> [*]: sai da tela
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

@@ -24,6 +24,26 @@ deliberadamente não cria tópico nem banco em produção.
 
 O código de referência está em [implantação e infraestrutura](../07-implantacao-e-infraestrutura.md#7-iac-de-referência).
 
+```mermaid
+flowchart LR
+    subgraph terraform["Terraform cria e mantém"]
+        rede["Rede e Cloud SQL"]
+        msg["Pub/Sub e dead-letter"]
+        seg["Segredos, sem o valor"]
+        svc["Cloud Run: serviços, Job e Scheduler<br/>ignora a mudança de imagem"]
+        borda["Load Balancer e Cloud Armor"]
+        iam["Service accounts e IAM"]
+    end
+
+    estado[("Bucket do GCS<br/>estado por ambiente")]
+    pipeline["Pipeline com gcloud"]
+    valores["Valores dos segredos<br/>adicionados por fora"]
+
+    terraform --> estado
+    pipeline -->|"publica imagem e revisão"| svc
+    valores -.-> seg
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

@@ -18,6 +18,18 @@ tudo o que fosse lançado até o dia 6.
 - O calendário da tela tem `max` em hoje.
 - No lote, a mesma regra vale item a item.
 
+```mermaid
+flowchart LR
+    data["Data do lançamento"] --> futura{"Depois de hoje<br/>em São Paulo?"}
+    futura -->|"sim"| recusa["400<br/>a data não pode ser futura"]
+    futura -->|"não"| grava["Grava e segue o fluxo"]
+
+    hipotese["Se fosse aceita e<br/>segurada até a data"] -.->|"travaria"| sucessores["todos os lançamentos<br/>seguintes da conta"]
+
+    classDef descartada fill:#eceff1,stroke:#90a4ae,color:#263238,stroke-dasharray: 4 3
+    class hipotese,sucessores descartada
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

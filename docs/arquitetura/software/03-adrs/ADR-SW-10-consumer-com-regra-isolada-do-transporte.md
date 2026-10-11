@@ -29,6 +29,15 @@ mensagem por HTTP.
 - O consolidador usa do corpo só o `lancamentoId`. Conta, sequência e valor vêm da linha no
   banco.
 
+```mermaid
+flowchart TB
+    ps[["Pub/Sub"]] -->|"mensagem"| worker["ConsolidacaoWorker<br/>transporte, sem regra"]
+    worker -->|"corpo e id"| regra["ConsolidadorDeMensagem<br/>regra, sem Pub/Sub"]
+    regra -->|"lancamentoId"| db[("Banco<br/>conta, sequência e valor")]
+    regra -->|"consolidou, repetida<br/>ou corpo inválido"| conf["Confirmar → Ack"]
+    regra -->|"falhou ao consolidar"| dev["Devolver → Nack"]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

@@ -8,6 +8,31 @@ A visão da solução (nuvem, rede, integração entre sistemas, segurança, tra
 [requisitos funcionais](../../requisitos-funcionais.md), e o que ele garante, nos
 [requisitos não funcionais](../../requisitos-nao-funcionais.md).
 
+## Visão geral
+
+Os processos, as camadas de cada um e por onde o lançamento passa. A seta tracejada é a entrega do evento.
+
+```mermaid
+flowchart TB
+    front["Front · Angular<br/>telas<br/>→ services do core"]
+    bff["BFF<br/>endpoints<br/>→ posse da conta<br/>→ services e conversores<br/>→ cliente da WebApi"]
+    webapi["WebApi<br/>endpoints<br/>→ posse da conta<br/>→ dispatcher e validação<br/>→ handlers"]
+    dados[".Events<br/>LancamentoRepository<br/>RelayLancamentos<br/>PubSubPublicador"]
+    relay["Relay<br/>RelayWorker"]
+    consumer["Consumer<br/>ConsolidacaoWorker<br/>→ ConsolidadorDeMensagem"]
+    db[("SQL Server")]
+    ps[["Pub/Sub"]]
+
+    front -->|"HTTP /api"| bff
+    bff -->|"HTTP + Bearer"| webapi
+    webapi -->|"grava e publica já"| dados
+    relay -->|"varredura"| dados
+    dados --> db
+    dados --> ps
+    ps -.->|"evento"| consumer
+    consumer -->|"consolida pelo repositório"| db
+```
+
 ## 1. O aplicativo
 
 Uma conta corrente com saldo consolidado assíncrono. O lançamento é gravado na hora; a

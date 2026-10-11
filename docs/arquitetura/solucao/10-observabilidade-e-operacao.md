@@ -3,6 +3,44 @@
 Como saber que algo vai mal antes do usuário, seguir um lançamento de ponta a ponta, medir os
 SLOs e agir quando um alerta toca. Retrato do commit `45bcd17`, em 07/10/2026.
 
+## Visão geral
+
+Do sinal ao alerta, e do alerta ao runbook.
+
+```mermaid
+flowchart LR
+    subgraph sinais["Sinais"]
+        logs["Logs JSON<br/>com lancamentoId"]
+        met["Métricas<br/>da aplicação"]
+        tr["Traces de<br/>ponta a ponta"]
+        rec["Reconciliação<br/>R1 a R6"]
+        plat["Métricas do Pub/Sub,<br/>Cloud Run e Cloud SQL"]
+    end
+
+    gcp["Cloud Logging,<br/>Monitoring e Trace<br/>SLOs e alertas"]
+    sev{"Severidade<br/>SEV1 a SEV3"}
+
+    subgraph runbooks["Runbooks"]
+        rb1["RB-01 e RB-02<br/>contas em Erro"]
+        rb3["RB-03 e RB-04<br/>esteira parada"]
+        rb5["RB-05<br/>presos depois do broker"]
+        rb6["RB-06<br/>banco lento"]
+        rb7["RB-07<br/>ataque ao login"]
+    end
+
+    logs --> gcp
+    met --> gcp
+    tr --> gcp
+    rec --> gcp
+    plat --> gcp
+    gcp --> sev
+    sev --> rb1
+    sev --> rb3
+    sev --> rb5
+    sev --> rb6
+    sev --> rb7
+```
+
 ## 1. Objetivos
 
 1. **Detectar antes do usuário** que o lançamento falha, que a consolidação parou ou que um

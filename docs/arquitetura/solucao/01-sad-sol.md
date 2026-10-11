@@ -7,6 +7,64 @@ A organização interna do aplicativo está no [SAD-App](../software/01-sad-app.
 sistema faz e garante está nos [requisitos funcionais](../../requisitos-funcionais.md) e nos
 [não funcionais](../../requisitos-nao-funcionais.md).
 
+## Visão geral
+
+Do que o problema exige às decisões, e o que se pode afirmar hoje sobre cada atributo de qualidade. Verde: atendido; amarelo: parcial ou não comprovado.
+
+```mermaid
+flowchart LR
+    subgraph forcas["O que o problema exige"]
+        direction TB
+        f1["Lançar com a consolidação<br/>fora do ar"]
+        f2["50 consultas por segundo<br/>com até 5% de perda"]
+        f3["Ordem dentro da conta"]
+        f4["Cada usuário só vê<br/>a própria conta"]
+        f5["GCP com operação mínima"]
+        f6["Repositório público"]
+    end
+
+    subgraph decisoes["Decisões"]
+        direction TB
+        d1["Outbox na linha e<br/>publicação híbrida<br/>SW-03, SOL-04"]
+        d2["Consolidação por Pub/Sub,<br/>chave = conta<br/>SOL-03"]
+        d3["Read model no mesmo banco<br/>SOL-07"]
+        d4["BFF e posse conferida<br/>duas vezes<br/>SOL-05, SOL-06"]
+        d5["Cloud Run e Cloud SQL<br/>SOL-01, SOL-02"]
+        d6["Segredos fora do código<br/>SOL-10"]
+    end
+
+    subgraph situacao["Situação hoje"]
+        direction TB
+        q1["QA-1 Disponibilidade<br/>atendido"]
+        q2["QA-2 e QA-3 Consistência<br/>parcial"]
+        q4["QA-4 Desempenho<br/>não comprovado"]
+        q5["QA-5 Segurança<br/>atendido"]
+        q6["QA-6 Operabilidade<br/>parcial"]
+        q7["QA-7 Portabilidade<br/>atendido"]
+    end
+
+    f1 --> d1
+    f1 --> d2
+    f3 --> d1
+    f3 --> d2
+    f2 --> d3
+    f4 --> d4
+    f5 --> d5
+    f6 --> d6
+    d1 --> q1
+    d1 --> q6
+    d2 --> q2
+    d3 --> q4
+    d4 --> q5
+    d6 --> q5
+    d5 --> q7
+
+    classDef ok fill:#2e7d32,stroke:#1b5e20,color:#ffffff
+    classDef parcial fill:#f9a825,stroke:#c17900,color:#000000
+    class q1,q5,q7 ok
+    class q2,q4,q6 parcial
+```
+
 ## 1. Contexto de negócio
 
 Um comerciante precisa controlar o fluxo de caixa diário, com lançamentos de crédito e de
@@ -75,7 +133,7 @@ por evento. A tela mostra o saldo consolidado, o que está em trânsito e o sald
 ## 6. Visão ponta a ponta
 
 ```mermaid
-flowchart LR
+flowchart TB
     user(["Cliente ou Admin<br/>navegador ou PWA"])
 
     subgraph borda["Borda"]

@@ -19,6 +19,29 @@ continuar logado depois de um F5 e quando é reaberto do ícone.
 - Renovação recusada descarta a sessão e leva a `/entrar`. O logout descarta localmente e
   avisa o servidor; sem rede, a renovação só vence.
 
+```mermaid
+sequenceDiagram
+    participant TA as Tela A
+    participant TB as Tela B
+    participant S as AuthService
+    participant B as BFF
+    TA->>B: GET com o JWT vencido
+    B-->>TA: 401
+    TB->>B: GET com o JWT vencido
+    B-->>TB: 401
+    TA->>S: renovar
+    S->>B: POST /api/auth/renovar
+    TB->>S: renovar
+    Note over TB,S: recebe a mesma promessa, sem uma segunda renovação
+    B-->>S: par novo
+    S->>S: grava no localStorage
+    S-->>TA: JWT novo
+    S-->>TB: JWT novo
+    TA->>B: repete o GET
+    TB->>B: repete o GET
+    Note over TA,B: duas abas do navegador não dividem a promessa, e a segunda dispara o alarme de reuso
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

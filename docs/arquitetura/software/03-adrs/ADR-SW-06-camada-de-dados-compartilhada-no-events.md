@@ -22,6 +22,23 @@ O projeto `.Events`, além do worker do relay, carrega:
 A WebApi e o Consumer referenciam o `.Events`. O registro de DI é compartilhado
 (`AddLancamentosData`, `AddPubSub`, `AddRelay`).
 
+```mermaid
+flowchart TB
+    subgraph events[".Events"]
+        direction LR
+        repo["LancamentoRepository<br/>um SQL por transição"]
+        boot["DatabaseBootstrapper"]
+        contrato["LancamentoRegistradoEvent"]
+        publica["RelayLancamentos<br/>PubSubPublicador"]
+    end
+
+    webapi["WebApi"] -->|"referência de projeto"| events
+    consumer["Consumer"] -->|"referência de projeto"| events
+    worker["RelayWorker<br/>o próprio .Events"] --> publica
+    repo --> db[("SQL Server")]
+    publica --> ps[["Pub/Sub"]]
+```
+
 ## Alternativas consideradas
 
 | Alternativa | Por que não |

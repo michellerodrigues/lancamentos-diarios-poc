@@ -10,6 +10,33 @@ Eles se apoiam nos documentos que já existiam e não os repetem:
 [capacidade do relay](../capacidade-do-relay.md),
 [cobertura dos testes](../cobertura-de-testes.md) e o [README](../../README.md).
 
+## Mapa dos documentos
+
+Por onde entrar e como os documentos se ligam. A lista completa de cada conjunto vem logo abaixo.
+
+```mermaid
+flowchart TB
+    origem["Requisitos e medições<br/>documentos de origem"]
+    adrs["ADRs<br/>13 de solução e 14 de software"]
+    sadsol["SAD-Sol<br/>a solução de ponta a ponta"]
+    sadapp["SAD-App<br/>o aplicativo por dentro"]
+    detSol["Solução em detalhe<br/>C4 1 e 2, integração,<br/>dados macro, segurança,<br/>implantação, NFRs"]
+    detSw["Software em detalhe<br/>C4 3 e 4, contratos,<br/>modelo de dados, NFRs,<br/>testes, build e deploy"]
+    contratos[["contratos/<br/>OpenAPI e AsyncAPI"]]
+    operar["Transição e riscos,<br/>observabilidade e runbooks"]
+
+    origem --> sadsol
+    adrs -->|"justificam"| sadsol
+    adrs -->|"justificam"| sadapp
+    sadsol -->|"zoom no aplicativo"| sadapp
+    sadsol --> detSol
+    sadapp --> detSw
+    detSol --> contratos
+    detSw --> contratos
+    detSol --> operar
+    detSw --> operar
+```
+
 ## Arquiteto de software
 
 Foco: o aplicativo, seus componentes, o código, os padrões e a qualidade técnica.
@@ -111,7 +138,7 @@ já lista.
 
 | Onde | O que diz | O que o código faz |
 |---|---|---|
-| [`docs/fluxo_auth.mermeid`](../fluxo_auth.mermeid) e `lancamentos_diarios_segurança.jpg` | O BFF gera o JWT | Só a WebApi emite; o BFF valida e repassa. A extensão `.mermeid` também impede o GitHub de desenhar o diagrama: `.mmd`, ou um bloco `mermaid` num `.md` |
+| [`docs/fluxo_auth.mermeid`](../fluxo_auth.mermeid) e `lancamentos_diarios_segurança.jpg` | O BFF gera o JWT | Só a WebApi emite; o BFF valida e repassa. A extensão `.mermeid` também impede o GitHub de desenhar o diagrama; dentro de um bloco `mermaid` num `.md` ele é desenhado |
 | `appsettings.json` da WebApi e do BFF | `"Chave": "MinhaChaveCompartilhada"`, desde o commit `45bcd17` | O README diz que a chave não fica no `appsettings.json`. Com 23 bytes a aplicação não sobe, então não é brecha; vale voltar a vazio |
 | README, IAM da service account do relay | Três papéis | O `--set-secrets` do script também exige `secretmanager.secretAccessor`; o `cloudsql.client` não é necessário com IP privado direto |
 | Comentário do script do relay | Duas execuções simultâneas poderiam publicar fora de ordem | A reserva não traz sucessor de lançamento em `Lido`, então a ordem se mantém. Duas execuções duplicariam trabalho e mensagens; manter uma tarefa e o timeout menor que o intervalo continua certo |

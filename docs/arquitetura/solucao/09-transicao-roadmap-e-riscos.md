@@ -8,6 +8,42 @@ As datas são proposta para dimensionar o esforço, contadas a partir de 12/10/2
 compromisso. Elas supõem uma equipe pequena (duas a três pessoas de desenvolvimento e uma de
 plataforma) e precisam ser refeitas com a equipe real.
 
+## Visão geral
+
+As fases e a dependência entre elas (o Gantt da seção 3 mostra o tempo), e os riscos altos e críticos que cada fase mitiga.
+
+```mermaid
+flowchart TB
+    f0["F0 Fundação<br/>tipo do parâmetro, RCSI, CI"]
+    f1["F1 Plataforma GCP<br/>Terraform e deploy"]
+    f2["F2 Consolidação robusta<br/>transação única, DLQ,<br/>relay em lote"]
+    f3["F3 Segurança e<br/>observabilidade"]
+    f4["F4 Piloto<br/>comerciantes convidados"]
+    f5["F5 Produção e evolução"]
+
+    r01(["R01 consulta sem volume<br/>crítico"])
+    r02(["R02 lançamento fora<br/>do saldo · alto"])
+    r04(["R04 recuperação<br/>lenta · alto"])
+    r06(["R06 força bruta<br/>alto"])
+    r15(["R15 conhecimento<br/>concentrado · alto"])
+
+    f0 --> f1
+    f0 --> f2
+    f0 --> f3
+    f1 --> f4
+    f2 --> f4
+    f3 --> f4
+    f4 --> f5
+    f0 -.->|"mitiga"| r01
+    f2 -.->|"mitiga"| r02
+    f2 -.->|"mitiga"| r04
+    f3 -.->|"mitiga"| r06
+    f4 -.->|"mitiga"| r15
+
+    classDef risco fill:#c62828,stroke:#8e0000,color:#ffffff
+    class r01,r02,r04,r06,r15 risco
+```
+
 ## 1. Ponto de partida
 
 | Área | Situação |
