@@ -3,21 +3,21 @@
 O front usa o esquema de cores azul marinho, vermelho, magenta e azul claro.
 
 Os tokens ficam no `:root` de [`styles.scss`](../MeusLancamentosDiarios.Integrator.FrontEnd/src/styles.scss),
-com nome de função e não de cor do site: para trocar a identidade de novo, muda-se só ali.
+com nome de função e não de cor: para trocar a identidade de novo, muda-se só ali.
 
 ## Paleta
 
-| Token | Cor | No site | No app |
-|---|---|---|---|
-| `--azul` | `#1E5BC6` | cor da marca: blocos, botões, links | cabeçalho, botão principal, links, valor do saldo, foco dos campos |
-| `--azul-escuro` | `#0E2565` | botões escuros (cookies) | hover do botão principal, texto do selo de role |
-| `--azul-claro` | `#E1EFFF` | faixa do menu do topo | texto secundário sobre o azul, fundo do selo de role |
-| `--magenta` | `#E6007E` | o botão "Peça já o seu" | o botão flutuante de novo lançamento: a ação principal |
-| `--tinta` | `#263A79` | títulos | texto principal |
-| `--cinza` | `#5A626B` | texto corrido | texto secundário |
-| `--degrade` | `#1E5BC6` → `#4842B3` → `#9F1B9F` | fundo do destaque da home | o card de saldo projetado e os ícones do PWA |
+| Token | Cor | No app |
+|---|---|---|
+| `--azul` | `#1E5BC6` | a marca: cabeçalho, botão principal, links, valor do saldo, foco dos campos |
+| `--azul-escuro` | `#0E2565` | hover do botão principal, texto do selo de role |
+| `--azul-claro` | `#E1EFFF` | texto secundário sobre o azul, fundo do selo de role |
+| `--magenta` | `#E6007E` | o botão flutuante de novo lançamento: a ação principal |
+| `--tinta` | `#263A79` | texto principal |
+| `--cinza` | `#5A626B` | texto secundário |
+| `--degrade` | `#1E5BC6` → `#4842B3` → `#9F1B9F` | o card de saldo projetado e os ícones do PWA |
 
-Derivados, porque o site não tem o equivalente:
+Derivados, para fundo, campos e estados:
 
 | Token | Cor | Por quê |
 |---|---|---|
@@ -27,8 +27,8 @@ Derivados, porque o site não tem o equivalente:
 | `--azul-desabilitado` | `#A9BFE6` | botão desabilitado |
 | `--magenta-escuro` | `#C2006A` | hover do botão de novo lançamento |
 | `--placeholder` | `#8A929B` | dica dentro dos campos |
-| `--credito` | `#1A7FA3` | o ciano do site (`#31A7CD`) escurecido: o original dá 2,8:1 sobre branco, este passa de 4,5:1 |
-| `--vermelho` | `#B3261E` | débito e erro. Fora da paleta: o magenta do site é de ação, não de alerta |
+| `--credito` | `#1A7FA3` | um ciano (`#31A7CD`) escurecido: o original dá 2,8:1 sobre branco, este passa de 4,5:1 |
+| `--vermelho` | `#B3261E` | débito e erro. Fora da paleta: o magenta é de ação, não de alerta |
 
 ## Contraste (WCAG)
 

@@ -1,22 +1,22 @@
-/* Identidade visual da POC: o esquema de cores de carrefoursolucoes.com.br,
-   medido no site em 02/10/2026 (ver docs/identidade-visual.md).
+/* Identidade visual da POC: azul como marca, magenta na acao principal
+   (ver docs/identidade-visual.md).
    Fonte: Kumbh Sans (SIL OFL), a livre mais proxima da Azo Sans. Vem do pacote
    @fontsource-variable/kumbh-sans (angular.json > styles), entao vai no build e o
    PWA a guarda para uso offline. */
 
 :root {
-  /* Do site */
+  /* Paleta */
   --azul: #1e5bc6;          /* a marca: cabecalho, botao principal, links, saldo */
-  --azul-escuro: #0e2565;   /* botoes escuros e titulos do site */
-  --azul-claro: #e1efff;    /* faixas do site; aqui, texto secundario sobre o azul */
-  --magenta: #e6007e;       /* a acao principal ("Peca ja o seu"); aqui, o novo lancamento */
+  --azul-escuro: #0e2565;   /* hover do botao principal, texto do selo de role */
+  --azul-claro: #e1efff;    /* texto secundario sobre o azul */
+  --magenta: #e6007e;       /* a acao principal: o novo lancamento */
   --tinta: #263a79;         /* texto principal */
   --cinza: #5a626b;         /* texto secundario */
 
-  /* O degrade do destaque do site, do azul ao roxo-magenta. */
+  /* O degrade do destaque, do azul ao roxo-magenta. */
   --degrade: linear-gradient(110deg, #1e5bc6 0%, #4842b3 50%, #9f1b9f 100%);
 
-  /* Derivados: tons para fundo, campo e estados, que o site nao precisa ter. */
+  /* Derivados: tons para fundo, campo e estados. */
   --magenta-escuro: #c2006a;
   --azul-desabilitado: #a9bfe6;
   --fundo: #f2f7ff;
@@ -24,12 +24,12 @@
   --borda: #cfdcf0;
   --placeholder: #8a929b;
 
-  /* O ciano do site (#31a7cd) escurecido: no original, texto sobre branco
+  /* Um ciano (#31a7cd) escurecido: no original, texto sobre branco
      fica em 2,8:1; assim passa de 4,5:1. */
   --credito: #1a7fa3;
 
   /* Fora da paleta: semantica de valor negativo, convencao consolidada em
-     tela financeira. O magenta do site e de acao, nao de erro. */
+     tela financeira. O magenta e de acao, nao de erro. */
   --vermelho: #b3261e;
 
   --branco: #ffffff;

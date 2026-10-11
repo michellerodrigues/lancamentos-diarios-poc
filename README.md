@@ -542,16 +542,15 @@ licenciamento do MediatR para dentro do projeto.
 **`NuGet.config` com `<clear />`.** A POC não consome pacote interno; sem isso o restore
 tenta o feed privado `Agro_Feed` e falha com 401.
 
-**Cores do carrefoursolucoes.com.br.** O front usa o esquema de cores do site, medido
-nele: azul `#1E5BC6` como marca, magenta `#E6007E` só na ação principal (novo
-lançamento) e o degradê do destaque no saldo projetado. Os tokens têm nome de função
-(`--azul`, `--credito`, `--fundo`), então trocar a identidade é mexer só no `:root` do
-`styles.scss`. Paleta, derivados e contraste em
+**Paleta azul e magenta.** Azul `#1E5BC6` como marca, magenta `#E6007E` só na ação
+principal (novo lançamento) e um degradê do azul ao roxo no saldo projetado. Os tokens
+têm nome de função (`--azul`, `--credito`, `--fundo`), então trocar a identidade é mexer
+só no `:root` do `styles.scss`. Paleta, derivados e contraste em
 [docs/identidade-visual.md](docs/identidade-visual.md).
 
-**Vermelho no débito.** Fora da paleta do site, usado só no formulário como semântica de
-valor negativo; o magenta do site é de ação, não de alerta. Na lista de pendentes o
-débito fica em cinza.
+**Vermelho no débito.** Fora da paleta, usado só no formulário como semântica de valor
+negativo; o magenta é de ação, não de alerta. Na lista de pendentes o débito fica em
+cinza.
 
 **Fonte Kumbh Sans.** Livre (SIL OFL) e a mais próxima da Azo Sans, que é paga e não pode
 ficar num repositório público. A escolha foi por medição, entre 20 fontes do Google Fonts.
